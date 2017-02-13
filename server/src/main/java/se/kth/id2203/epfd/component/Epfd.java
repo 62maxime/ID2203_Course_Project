@@ -1,15 +1,19 @@
 package se.kth.id2203.epfd.component;
 
+import se.kth.id2203.epfd.event.ListenTo;
+import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 /**
  * Created by ralambom on 11/02/17.
@@ -34,25 +38,33 @@ public class Epfd extends ComponentDefinition {
     private HashSet<NetAddress> suspected = new HashSet<>();
     private int seqnum = 0;
 
+    //Timeout Id
+    private UUID timerId;
+
     public Epfd(EpfdInit init) {
         this.self = init.getSelfAddress();
-        this.topology.addAll(init.getAllAddresses());
+        this.topology.add(init.getSelfAddress());
         this.delta = init.getDelta();
 
         this.period = init.getInitialPeriod();
-        this.alive.addAll(init.getAllAddresses());
+        this.alive.add(init.getSelfAddress());
 
         subscribe(startHandler, control);
         subscribe(checkTimeoutHandler, timer);
         subscribe(heartbeatReqHandler, pLink);
         subscribe(heartbeatRepHandler, pLink);
+        subscribe(listenToHandler, pLink);
+        subscribe(resetHandler, pLink);
     }
 
     private void startTimer(long period) {
         ScheduleTimeout scheduledTimeout = new ScheduleTimeout(period);
         scheduledTimeout.setTimeoutEvent(new CheckTimeout(scheduledTimeout));
         trigger(scheduledTimeout, timer);
+        timerId = scheduledTimeout.getTimeoutEvent().getTimeoutId();
     }
+
+    //Handlers
 
     private Handler<Start> startHandler = new Handler<Start>()
     {
@@ -99,11 +111,39 @@ public class Epfd extends ComponentDefinition {
     private Handler<HeartbeatReply> heartbeatRepHandler = new Handler<HeartbeatReply>() {
         @Override
         public void handle(HeartbeatReply heartbeatReply) {
-            if(heartbeatReply.getSeqnum() == seqnum || suspected.contains(heartbeatReply.getSource())) {
-                alive.add(heartbeatReply.getSource());
+            if(topology.contains(heartbeatReply.getSource())) {
+                if (heartbeatReply.getSeqnum() == seqnum || suspected.contains(heartbeatReply.getSource())) {
+                    alive.add(heartbeatReply.getSource());
+                }
             }
         }
     };
 
+    private Handler<ListenTo> listenToHandler = new Handler<ListenTo>() {
+        @Override
+        public void handle(ListenTo listenTo) {
+            trigger(new CancelTimeout(timerId), timer);
+            topology.addAll(listenTo.getAddresses());
+            alive.addAll(listenTo.getAddresses());
+            startTimer(period);
+        }
+    };
+
+    private Handler<Reset> resetHandler = new Handler<Reset>() {
+        @Override
+        public void handle(Reset reset) {
+            topology.clear();
+            trigger(new CancelTimeout(timerId), timer);
+            alive.clear();
+
+            self = reset.getInit().getSelfAddress();
+            topology.add(reset.getInit().getSelfAddress());
+            delta = reset.getInit().getDelta();
+            period = reset.getInit().getInitialPeriod();
+            alive.add(reset.getInit().getSelfAddress());
+
+            startTimer(period);
+        }
+    };
 
 }
