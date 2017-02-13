@@ -35,7 +35,7 @@ public class ParentComponent
     //******* Children ******
     protected final Component overlay = create(VSOverlayManager.class, Init.NONE);
     protected final Component kv = create(KVService.class, Init.NONE);
-    protected final Component epfd;
+    protected final Component epfd = null;
     protected final Component boot;
 
     {
@@ -43,12 +43,12 @@ public class ParentComponent
         Optional<NetAddress> serverO = config().readValue("id2203.project.bootstrap-address", NetAddress.class);
         if (serverO.isPresent()) { // start in client mode
             boot = create(BootstrapClient.class, Init.NONE);
-            epfd = create(Epfd.class, new EpfdInit(self.get(), new HashSet<Address>(serverO.asSet()), 10,
-                    40));
+           // epfd = create(Epfd.class, new EpfdInit(self.get(), new HashSet<Address>(serverO.asSet()), 10,
+                    //40));
         } else { // start in server mode
             boot = create(BootstrapServer.class, Init.NONE);
-            epfd = create(Epfd.class, new EpfdInit(self.get(), null, 10,
-                    40));
+            //epfd = create(Epfd.class, new EpfdInit(self.get(), null, 10,
+              //      40));
         }
         connect(timer, boot.getNegative(Timer.class), Channel.TWO_WAY);
         connect(net, boot.getNegative(Network.class), Channel.TWO_WAY);
@@ -59,10 +59,10 @@ public class ParentComponent
         connect(overlay.getPositive(Routing.class), kv.getNegative(Routing.class), Channel.TWO_WAY);
         connect(net, kv.getNegative(Network.class), Channel.TWO_WAY);
         // EPFD
-        connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
+        /*connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
                 boot.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
         connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
                 overlay.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
-        connect(net, epfd.getNegative(Network.class), Channel.TWO_WAY);
+        connect(net, epfd.getNegative(Network.class), Channel.TWO_WAY);*/
     }
 }
