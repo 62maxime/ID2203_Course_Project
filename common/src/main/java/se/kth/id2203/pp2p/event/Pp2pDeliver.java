@@ -8,16 +8,21 @@ import java.io.Serializable;
 /**
  * Created by ralambom on 11/02/17.
  */
-public abstract class Pp2pDeliver implements KompicsEvent, Serializable {
+public final class Pp2pDeliver implements KompicsEvent{
 
-    private static final long serialVersionUID = -314262496401376431L;
     private NetAddress source;
+    private KompicsEvent payload;
 
-    public Pp2pDeliver(NetAddress source) {
+    public Pp2pDeliver(NetAddress source, KompicsEvent payload) {
         this.source = source;
+        this.payload = payload;
     }
 
     public NetAddress getSource() {
         return source;
+    }
+
+    public KompicsEvent getPayload() {
+        return payload;
     }
 }

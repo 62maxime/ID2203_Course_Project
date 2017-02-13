@@ -7,9 +7,9 @@ import se.sics.kompics.PortType;
 /**
  * Created by ralambom on 12/02/17.
  */
-public class PerfectPointToPointLink extends PortType {
+public class Pp2pPort extends PortType {
     {
+        request(Pp2pSend.class);
         indication(Pp2pDeliver.class);
-        indication(Pp2pSend.class);
     }
 }
