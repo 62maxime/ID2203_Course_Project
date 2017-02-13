@@ -3,10 +3,10 @@ package se.kth.id2203.epfd.component;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
+import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.pp2p.event.Pp2pSend;
 import se.kth.id2203.pp2p.port.PerfectPointToPointLink;
 import se.sics.kompics.*;
-import se.sics.kompics.network.Address;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -25,14 +25,14 @@ public class Epfd extends ComponentDefinition {
     // EPDF component state and initialization
 
     //configuration parameters
-    private Address self;
-    private HashSet<Address> topology = new HashSet<>();
+    private NetAddress self;
+    private HashSet<NetAddress> topology = new HashSet<>();
     private long delta;
 
     //mutable state
     private long period;
-    private HashSet<Address> alive = new HashSet<>();
-    private HashSet<Address> suspected = new HashSet<>();
+    private HashSet<NetAddress> alive = new HashSet<>();
+    private HashSet<NetAddress> suspected = new HashSet<>();
     private int seqnum = 0;
 
     public Epfd(EpfdInit init) {
@@ -67,14 +67,14 @@ public class Epfd extends ComponentDefinition {
     private Handler<CheckTimeout> checkTimeoutHandler = new Handler<CheckTimeout>() {
         @Override
         public void handle(CheckTimeout checkTimeout) {
-            for(Address address : alive) {
+            for(NetAddress address : alive) {
                 if(suspected.contains(address)) {
                     period += delta;
                     break;
                 }
             }
             seqnum ++;
-            for(Address p : topology) {
+            for(NetAddress p : topology) {
                 if(!alive.contains(p) && !suspected.contains(p)) {
                     suspected.add(p);
                     trigger(new Suspect(p), epfd);

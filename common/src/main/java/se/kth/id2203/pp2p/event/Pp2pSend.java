@@ -1,8 +1,8 @@
 package se.kth.id2203.pp2p.event;
 
+import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.pp2p.event.Pp2pDeliver;
 import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
 
 /**
  * Created by ralambom on 11/02/17.
@@ -10,9 +10,9 @@ import se.sics.kompics.network.Address;
 public final class Pp2pSend implements KompicsEvent{
 
     private Pp2pDeliver deliverMsg;
-    private Address destination;
+    private NetAddress destination;
 
-    public Pp2pSend(Address destination, Pp2pDeliver deliverMsg) {
+    public Pp2pSend(NetAddress destination, Pp2pDeliver deliverMsg) {
         this.deliverMsg = deliverMsg;
         this.destination = destination;
     }
@@ -21,7 +21,7 @@ public final class Pp2pSend implements KompicsEvent{
         return deliverMsg;
     }
 
-    public Address getDestination() {
+    public NetAddress getDestination() {
         return destination;
     }
 }
