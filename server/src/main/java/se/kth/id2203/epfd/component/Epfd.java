@@ -4,9 +4,8 @@ import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.pp2p.event.Pp2pSend;
-import se.kth.id2203.pp2p.port.PerfectPointToPointLink;
 import se.sics.kompics.*;
+import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -19,7 +18,7 @@ public class Epfd extends ComponentDefinition {
 
     //EPFD subscriptions
     private Positive<Timer> timer = requires(Timer.class);
-    private Positive<PerfectPointToPointLink> pLink = requires(PerfectPointToPointLink.class);
+    private Positive<Network> pLink= requires(Network.class);
     private Negative<EventuallyPerfectFailureDetector> epfd = provides(EventuallyPerfectFailureDetector.class);
 
     // EPDF component state and initialization
@@ -83,7 +82,7 @@ public class Epfd extends ComponentDefinition {
                     suspected.remove(p);
                     trigger(new Restore(p), epfd);
                 }
-                trigger(new Pp2pSend(p, new HeartbeatRequest(self, seqnum)), pLink);
+                trigger(new HeartbeatRequest(self, p, seqnum), pLink);
             }
             alive.clear();
             startTimer(period);
@@ -93,7 +92,7 @@ public class Epfd extends ComponentDefinition {
     private Handler<HeartbeatRequest> heartbeatReqHandler = new Handler<HeartbeatRequest>() {
         @Override
         public void handle(HeartbeatRequest heartbeatRequest) {
-            trigger(new Pp2pSend(heartbeatRequest.getSource(), new HeartbeatReply(self, heartbeatRequest.getSeqnum())),pLink);
+            trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), seqnum),pLink);
         }
     };
 
