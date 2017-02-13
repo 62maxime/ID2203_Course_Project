@@ -47,7 +47,7 @@ public class BestEffortBroadcast extends ComponentDefinition {
         @Override
         public void handle(Pp2pDeliver pp2pDeliver) {
             LOG.info("[BebBroadcast] Pp2pDeliver received");
-            BebDeliver bebDeliver = new BebDeliver(pp2pDeliver.getSource(), null); //TODO
+            BebDeliver bebDeliver = new BebDeliver(pp2pDeliver.getSource(), pp2pDeliver.getPayload());
             trigger(bebDeliver, beb);
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
@@ -56,5 +56,8 @@ public class BestEffortBroadcast extends ComponentDefinition {
     public BestEffortBroadcast(BebInit init) {
         this.self = init.self;
         this.topology = init.topology;
+
+        subscribe(requestHandler, beb);
+        subscribe(deliverHandler, epfd);
     }
 }
