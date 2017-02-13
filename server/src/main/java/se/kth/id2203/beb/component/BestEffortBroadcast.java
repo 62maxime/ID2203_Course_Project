@@ -5,14 +5,13 @@ import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.port.BebPort;
+import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.pp2p.event.Pp2pDeliver;
-import se.kth.id2203.pp2p.event.Pp2pSend;
-import se.kth.id2203.pp2p.port.Pp2pPort;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
+import se.sics.kompics.network.Network;
 
 import java.util.Set;
 
@@ -24,7 +23,7 @@ public class BestEffortBroadcast extends ComponentDefinition {
     final static Logger LOG = LoggerFactory.getLogger(BestEffortBroadcast.class);
     //******* Ports ******
     protected final Negative<BebPort> beb = provides(BebPort.class);
-    protected final Positive<Pp2pPort> epfd = requires(Pp2pPort.class);
+    protected final Positive<Network> net = requires(Network.class);
     //******* Fields ******
     private final NetAddress self;
     private final Set<NetAddress> topology;
@@ -35,19 +34,18 @@ public class BestEffortBroadcast extends ComponentDefinition {
         public void handle(BebRequest bebRequest) {
             LOG.info("[BebBroadcast] BebRequest received by " + self.toString());
             for (NetAddress adr : topology) {
-                Pp2pSend pp2Send = new Pp2pSend(adr, bebRequest.payload);
-                trigger(pp2Send, epfd);
+                trigger(new Message(self, adr, bebRequest.payload), net);
                 LOG.info("[BebBroadcast] Payload sent to " + adr.toString());
             }
         }
     };
 
 
-    protected final Handler<Pp2pDeliver> deliverHandler = new Handler<Pp2pDeliver>() {
+    protected final Handler<Message> deliverHandler = new Handler<Message>() {
         @Override
-        public void handle(Pp2pDeliver pp2pDeliver) {
+        public void handle(Message payload) {
             LOG.info("[BebBroadcast] Pp2pDeliver received");
-            BebDeliver bebDeliver = new BebDeliver(pp2pDeliver.getSource(), pp2pDeliver.getPayload());
+            BebDeliver bebDeliver = new BebDeliver(payload.getSource(), payload.payload);
             trigger(bebDeliver, beb);
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
@@ -58,6 +56,6 @@ public class BestEffortBroadcast extends ComponentDefinition {
         this.topology = init.topology;
 
         subscribe(requestHandler, beb);
-        subscribe(deliverHandler, epfd);
+        subscribe(deliverHandler, net);
     }
 }
