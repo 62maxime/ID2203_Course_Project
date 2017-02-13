@@ -25,12 +25,16 @@ package se.kth.id2203.overlay;
 
 import com.larskroll.common.J6;
 import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.Booted;
 import se.kth.id2203.bootstrapping.Bootstrapping;
 import se.kth.id2203.bootstrapping.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.InitialAssignments;
+import se.kth.id2203.epfd.event.Restore;
+import se.kth.id2203.epfd.event.Suspect;
+import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.ClassMatchedHandler;
@@ -59,16 +63,20 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Positive<Bootstrapping> boot = requires(Bootstrapping.class);
     protected final Positive<Network> net = requires(Network.class);
     protected final Positive<Timer> timer = requires(Timer.class);
+    protected final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private LookupTable lut = null;
+    private ReplicationGroup replicationGroup;
     //******* Handlers ******
     protected final Handler<GetInitialAssignments> initialAssignmentHandler = new Handler<GetInitialAssignments>() {
 
         @Override
         public void handle(GetInitialAssignments event) {
+            int partitionGroupNumber = config().getValue("id2203.project.partitionGroupNumber", Integer.class);
+            int replicationDelta = config().getValue("id2203.project.replicationDelta", Integer.class);
             LOG.info("Generating LookupTable...");
-            LookupTable lut = LookupTable.generate(event.nodes);
+            LookupTable lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
             LOG.debug("Generated assignments:\n{}", lut);
             trigger(new InitialAssignments(lut), boot);
         }
@@ -80,6 +88,8 @@ public class VSOverlayManager extends ComponentDefinition {
             if (event.assignment instanceof LookupTable) {
                 LOG.info("Got NodeAssignment, overlay ready.");
                 lut = (LookupTable) event.assignment;
+                replicationGroup = lut.getKey(self);
+                // TODO Add Failure detection on the replicationGroup
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());
             }
@@ -93,6 +103,7 @@ public class VSOverlayManager extends ComponentDefinition {
             NetAddress target = J6.randomElement(partition);
             LOG.info("Forwarding message for key {} to {}", content.key, target);
             trigger(new Message(context.getSource(), target, content.msg), net);
+
         }
     };
     protected final Handler<RouteMsg> localRouteHandler = new Handler<RouteMsg>() {
@@ -103,6 +114,7 @@ public class VSOverlayManager extends ComponentDefinition {
             NetAddress target = J6.randomElement(partition);
             LOG.info("Routing message for key {} to {}", event.key, target);
             trigger(new Message(self, target, event.msg), net);
+
         }
     };
     protected final ClassMatchedHandler<Connect, Message> connectHandler = new ClassMatchedHandler<Connect, Message>() {
@@ -119,11 +131,27 @@ public class VSOverlayManager extends ComponentDefinition {
         }
     };
 
+    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
+        @Override
+        public void handle(Suspect suspect) {
+            replicationGroup.removeNode((NetAddress) suspect.getSource());
+        }
+    };
+
+    protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
+        @Override
+        public void handle(Restore restore) {
+            replicationGroup.addNode((NetAddress) restore.getSource());
+        }
+    };
+
     {
         subscribe(initialAssignmentHandler, boot);
         subscribe(bootHandler, boot);
         subscribe(routeHandler, net);
         subscribe(localRouteHandler, route);
         subscribe(connectHandler, net);
+        subscribe(suspectHandler, epfd);
+        subscribe(restoreHandler, epfd);
     }
 }

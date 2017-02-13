@@ -27,6 +27,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeMultimap;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
+
+import com.larskroll.common.J6;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.NodeAssignment;
 import se.kth.id2203.networking.NetAddress;
 
@@ -40,11 +46,14 @@ public class LookupTable implements NodeAssignment {
 
     private final TreeMultimap<Integer, NetAddress> partitions = TreeMultimap.create();
 
+    final static Logger LOG = LoggerFactory.getLogger(LookupTable.class);
+
+    // each partition handles [previous id, )
     public Collection<NetAddress> lookup(String key) {
         int keyHash = key.hashCode();
-        Integer partition = partitions.keySet().floor(keyHash);
+        Integer partition = partitions.keySet().higher(keyHash); // previously floor
         if (partition == null) {
-            partition = partitions.keySet().last();
+            partition = partitions.keySet().first(); // previously last
         }
         return partitions.get(partition);
     }
@@ -67,10 +76,33 @@ public class LookupTable implements NodeAssignment {
         return sb.toString();
     }
 
-    static LookupTable generate(ImmutableSet<NetAddress> nodes) {
+    static LookupTable generate(ImmutableSet<NetAddress> nodes, int partitionGroupNumber, int replicationDelta) {
         LookupTable lut = new LookupTable();
-        lut.partitions.putAll(0, nodes);
+        Random random = new Random();
+        HashSet<NetAddress> netAddresses = new HashSet<>(nodes);
+        for (int i = 0; i < partitionGroupNumber; i++) {
+            int key = random.nextInt(Integer.MAX_VALUE);
+            for (int j = 0; j < replicationDelta; j++) {
+                NetAddress netAddress = J6.randomElement(netAddresses);
+                netAddresses.remove(netAddress);
+                lut.partitions.put(key, netAddress);
+            }
+
+        }
         return lut;
     }
+
+    public ReplicationGroup getKey(NetAddress a) {
+        for (int key :
+                partitions.keySet()) {
+            if (partitions.get(key).contains(a)) {
+                return new ReplicationGroup(partitions.keySet().lower(key), key, partitions.get(key));
+            }
+        }
+        return null;
+    }
+
+
+
 
 }

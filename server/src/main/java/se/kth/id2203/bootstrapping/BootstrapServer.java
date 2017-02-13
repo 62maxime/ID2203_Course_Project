@@ -30,6 +30,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.BootstrapServer.State;
+import se.kth.id2203.epfd.component.Epfd;
+import se.kth.id2203.epfd.event.Restore;
+import se.kth.id2203.epfd.event.Suspect;
+import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.ClassMatchedHandler;
@@ -50,6 +54,7 @@ public class BootstrapServer extends ComponentDefinition {
     protected final Negative<Bootstrapping> boot = provides(Bootstrapping.class);
     protected final Positive<Network> net = requires(Network.class);
     protected final Positive<Timer> timer = requires(Timer.class);
+    protected final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     final int bootThreshold = config().getValue("id2203.project.bootThreshold", Integer.class);
@@ -87,6 +92,7 @@ public class BootstrapServer extends ComponentDefinition {
                     state = State.DONE;
                 }
             } else if (state == State.DONE) {
+                LOG.info("Suicide.");
                 suicide();
             }
         }
@@ -107,6 +113,7 @@ public class BootstrapServer extends ComponentDefinition {
         @Override
         public void handle(CheckIn content, Message context) {
             active.add(context.getSource());
+            // TODO Add failure detection on this node
         }
     };
     protected final ClassMatchedHandler<Ready, Message> readyHandler = new ClassMatchedHandler<Ready, Message>() {
@@ -116,12 +123,42 @@ public class BootstrapServer extends ComponentDefinition {
         }
     };
 
+    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
+        @Override
+        public void handle(Suspect suspect) {
+            if (state == State.COLLECTING) {
+                // Bootstrap Client is suspected to be dead => remove it from the Set
+                active.remove(suspect.getSource());
+            } else if (state == State.SEEDING) {
+                // nothing to do
+            } else if (state == State.DONE) {
+                // nothing to do
+            }
+        }
+    };
+
+    protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
+        @Override
+        public void handle(Restore restore) {
+            if (state == State.COLLECTING) {
+                // Bootstrap Client is restore  => add it in the Set
+                active.add((NetAddress) restore.getSource());
+            } else if (state == State.SEEDING) {
+                // nothing to do
+            } else if (state == State.DONE) {
+                // nothing to do
+            }
+        }
+    };
+
     {
         subscribe(startHandler, control);
         subscribe(timeoutHandler, timer);
         subscribe(assignmentHandler, boot);
         subscribe(checkinHandler, net);
         subscribe(readyHandler, net);
+        subscribe(suspectHandler, epfd);
+        subscribe(restoreHandler, epfd);
     }
 
     @Override

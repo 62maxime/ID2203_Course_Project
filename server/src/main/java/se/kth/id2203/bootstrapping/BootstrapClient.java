@@ -24,7 +24,11 @@
 package se.kth.id2203.bootstrapping;
 
 import java.util.UUID;
+
+import javafx.geometry.Pos;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.epfd.event.Suspect;
+import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.ClassMatchedHandler;
@@ -54,6 +58,7 @@ public class BootstrapClient extends ComponentDefinition {
     final Negative<Bootstrapping> bootstrap = provides(Bootstrapping.class);
     final Positive<Timer> timer = requires(Timer.class);
     final Positive<Network> net = requires(Network.class);
+    final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
     //******* Fields ******
     private final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private final NetAddress server = config().getValue("id2203.project.bootstrap-address", NetAddress.class);
@@ -103,6 +108,15 @@ public class BootstrapClient extends ComponentDefinition {
         }
     };
 
+    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
+        @Override
+        public void handle(Suspect suspect) {
+            // Bootstrap server is suspected to be dead => suicide
+            suicide();
+        }
+    };
+
+
     @Override
     public void tearDown() {
         trigger(new CancelPeriodicTimeout(timeoutId), timer);
@@ -112,5 +126,6 @@ public class BootstrapClient extends ComponentDefinition {
         subscribe(startHandler, control);
         subscribe(timeoutHandler, timer);
         subscribe(bootHandler, net);
+        subscribe(suspectHandler, epfd);
     }
 }
