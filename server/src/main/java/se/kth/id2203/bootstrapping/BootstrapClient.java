@@ -112,6 +112,7 @@ public class BootstrapClient extends ComponentDefinition {
         @Override
         public void handle(Suspect suspect) {
             // Bootstrap server is suspected to be dead => suicide
+            LOG.debug("Bootstrap server is suspected.");
             suicide();
         }
     };

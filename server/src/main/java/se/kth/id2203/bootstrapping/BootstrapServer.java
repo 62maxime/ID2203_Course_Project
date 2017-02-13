@@ -128,6 +128,7 @@ public class BootstrapServer extends ComponentDefinition {
     protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
         @Override
         public void handle(Suspect suspect) {
+            LOG.debug("Bootstrap client {} is suspected.", suspect.getSource().toString());
             if (state == State.COLLECTING) {
                 // Bootstrap Client is suspected to be dead => remove it from the Set
                 active.remove(suspect.getSource());
@@ -142,9 +143,10 @@ public class BootstrapServer extends ComponentDefinition {
     protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
         @Override
         public void handle(Restore restore) {
+            LOG.debug("Bootstrap client {} is restore.", restore.getSource().toString());
             if (state == State.COLLECTING) {
                 // Bootstrap Client is restore  => add it in the Set
-                active.add((NetAddress) restore.getSource());
+                active.add(restore.getSource());
             } else if (state == State.SEEDING) {
                 // nothing to do
             } else if (state == State.DONE) {

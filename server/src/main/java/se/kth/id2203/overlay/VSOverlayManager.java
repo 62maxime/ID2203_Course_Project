@@ -81,6 +81,9 @@ public class VSOverlayManager extends ComponentDefinition {
             LOG.info("Generating LookupTable...");
             LookupTable lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
             LOG.debug("Generated assignments:\n{}", lut);
+            replicationGroup = lut.getKey(self);
+            trigger(new Reset(new EpfdInit(self, 10, 40)), epfd);
+            trigger(new ListenTo(replicationGroup.getNodes()), epfd);
             trigger(new InitialAssignments(lut), boot);
         }
     };

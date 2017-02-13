@@ -1,5 +1,8 @@
 package se.kth.id2203.epfd.component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import se.kth.id2203.beb.component.BestEffortBroadcast;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Restore;
@@ -19,6 +22,8 @@ import java.util.UUID;
  * Created by ralambom on 11/02/17.
  */
 public class Epfd extends ComponentDefinition {
+
+    final static Logger LOG = LoggerFactory.getLogger(Epfd.class);
 
     //EPFD subscriptions
     private Positive<Timer> timer = requires(Timer.class);
@@ -98,6 +103,7 @@ public class Epfd extends ComponentDefinition {
     private Handler<HeartbeatRequest> heartbeatReqHandler = new Handler<HeartbeatRequest>() {
         @Override
         public void handle(HeartbeatRequest heartbeatRequest) {
+            LOG.debug("Heartbeat request from " + heartbeatRequest.getSource());
             trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), seqnum),pLink);
         }
     };
@@ -105,6 +111,8 @@ public class Epfd extends ComponentDefinition {
     private Handler<HeartbeatReply> heartbeatRepHandler = new Handler<HeartbeatReply>() {
         @Override
         public void handle(HeartbeatReply heartbeatReply) {
+            LOG.debug("Heartbeat Repky from " + heartbeatReply.getSource());
+
             if(topology.contains(heartbeatReply.getSource())) {
                 if (heartbeatReply.getSeqnum() == seqnum || suspected.contains(heartbeatReply.getSource())) {
                     alive.add(heartbeatReply.getSource());
@@ -116,6 +124,7 @@ public class Epfd extends ComponentDefinition {
     private Handler<ListenTo> listenToHandler = new Handler<ListenTo>() {
         @Override
         public void handle(ListenTo listenTo) {
+            LOG.debug("ListenTo from " + self+ " for " +  listenTo.getAddresses().toString());
             trigger(new CancelTimeout(timerId), timer);
             topology.addAll(listenTo.getAddresses());
             alive.addAll(listenTo.getAddresses());
@@ -126,6 +135,7 @@ public class Epfd extends ComponentDefinition {
     private Handler<Reset> resetHandler = new Handler<Reset>() {
         @Override
         public void handle(Reset reset) {
+            LOG.debug("Reset from" + self);
             topology.clear();
             trigger(new CancelTimeout(timerId), timer);
             alive.clear();
