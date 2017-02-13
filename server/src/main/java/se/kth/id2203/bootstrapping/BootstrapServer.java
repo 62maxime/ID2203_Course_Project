@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.BootstrapServer.State;
 import se.kth.id2203.epfd.component.Epfd;
+import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
@@ -113,7 +114,8 @@ public class BootstrapServer extends ComponentDefinition {
         @Override
         public void handle(CheckIn content, Message context) {
             active.add(context.getSource());
-            // TODO Add failure detection on this node
+            // TODO Test
+            trigger(new ListenTo(active), epfd);
         }
     };
     protected final ClassMatchedHandler<Ready, Message> readyHandler = new ClassMatchedHandler<Ready, Message>() {

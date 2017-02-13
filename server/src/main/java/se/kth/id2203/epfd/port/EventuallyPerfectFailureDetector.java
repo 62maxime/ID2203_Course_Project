@@ -1,5 +1,7 @@
 package se.kth.id2203.epfd.port;
 
+import se.kth.id2203.epfd.event.ListenTo;
+import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.sics.kompics.PortType;
@@ -12,6 +14,8 @@ public class EventuallyPerfectFailureDetector extends PortType {
     {
         indication(Suspect.class);
         indication(Restore.class);
+        request(ListenTo.class);
+        request(Reset.class);
     }
 
 }

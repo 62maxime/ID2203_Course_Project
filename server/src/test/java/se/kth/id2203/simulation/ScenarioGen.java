@@ -157,8 +157,8 @@ public abstract class ScenarioGen {
                     }
                 };
                 startCluster.start();
-                startClients.startAfterTerminationOf(10000, startCluster);
-                terminateAfterTerminationOf(100000, startClients);
+                startClients.startAfterTerminationOf(1000000, startCluster);
+                terminateAfterTerminationOf(10000000, startClients);
             }
         };
     }

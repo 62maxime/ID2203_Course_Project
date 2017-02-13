@@ -32,6 +32,9 @@ import se.kth.id2203.bootstrapping.Booted;
 import se.kth.id2203.bootstrapping.Bootstrapping;
 import se.kth.id2203.bootstrapping.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.InitialAssignments;
+import se.kth.id2203.epfd.component.EpfdInit;
+import se.kth.id2203.epfd.event.ListenTo;
+import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
@@ -89,7 +92,9 @@ public class VSOverlayManager extends ComponentDefinition {
                 LOG.info("Got NodeAssignment, overlay ready.");
                 lut = (LookupTable) event.assignment;
                 replicationGroup = lut.getKey(self);
-                // TODO Add Failure detection on the replicationGroup
+                // TODO Test
+                trigger(new Reset(new EpfdInit(self, 10, 40)), epfd);
+                trigger(new ListenTo(replicationGroup.getNodes()), epfd);
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());
             }

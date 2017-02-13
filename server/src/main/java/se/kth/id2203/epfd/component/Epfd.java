@@ -49,12 +49,6 @@ public class Epfd extends ComponentDefinition {
         this.period = init.getInitialPeriod();
         this.alive.add(init.getSelfAddress());
 
-        subscribe(startHandler, control);
-        subscribe(checkTimeoutHandler, timer);
-        subscribe(heartbeatReqHandler, pLink);
-        subscribe(heartbeatRepHandler, pLink);
-        subscribe(listenToHandler, pLink);
-        subscribe(resetHandler, pLink);
     }
 
     private void startTimer(long period) {
@@ -145,5 +139,15 @@ public class Epfd extends ComponentDefinition {
             startTimer(period);
         }
     };
+
+    {
+
+        subscribe(startHandler, control);
+        subscribe(checkTimeoutHandler, timer);
+        subscribe(heartbeatReqHandler, pLink);
+        subscribe(heartbeatRepHandler, pLink);
+        subscribe(listenToHandler, epfd);
+        subscribe(resetHandler, epfd);
+    }
 
 }

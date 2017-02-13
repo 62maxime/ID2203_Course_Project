@@ -38,4 +38,7 @@ public class ReplicationGroup {
         nodes.add(address);
     }
 
+    public NavigableSet<NetAddress> getNodes() {
+        return nodes;
+    }
 }
