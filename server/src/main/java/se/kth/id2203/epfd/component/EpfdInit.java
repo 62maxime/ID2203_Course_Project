@@ -1,8 +1,9 @@
 package se.kth.id2203.epfd.component;
 
+import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.Init;
-import se.sics.kompics.network.Address;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -10,24 +11,18 @@ import java.util.Set;
  */
 public class EpfdInit extends Init<Epfd> {
 
-    private final Address address;
-    private final Set<Address> listAddresses;
+    private final NetAddress address;
     private long delta;
     private long initialPeriod;
 
-    public EpfdInit(Address address, Set<Address> listAddresses, long delta, long initialPeriod) {
+    public EpfdInit(NetAddress address, long delta, long initialPeriod) {
         this.address = address;
-        this.listAddresses = listAddresses;
         this.delta = delta;
         this.initialPeriod = initialPeriod;
     }
 
-    public Address getSelfAddress() {
+    public NetAddress getSelfAddress() {
         return address;
-    }
-
-    public Set<Address> getAllAddresses() {
-        return listAddresses;
     }
 
     public long getDelta() {

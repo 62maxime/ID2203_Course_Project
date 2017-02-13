@@ -1,27 +1,27 @@
 package se.kth.id2203.pp2p.event;
 
+import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.pp2p.event.Pp2pDeliver;
 import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
 
 /**
  * Created by ralambom on 11/02/17.
  */
 public final class Pp2pSend implements KompicsEvent{
 
-    private Pp2pDeliver deliverMsg;
-    private Address destination;
+    private NetAddress destination;
+    private KompicsEvent payload;
 
-    public Pp2pSend(Address destination, Pp2pDeliver deliverMsg) {
-        this.deliverMsg = deliverMsg;
+    public Pp2pSend(NetAddress destination, KompicsEvent payload) {
+        this.payload = payload;
         this.destination = destination;
     }
 
-    public Pp2pDeliver getDeliverMsg() {
-        return deliverMsg;
+    public NetAddress getDestination() {
+        return destination;
     }
 
-    public Address getDestination() {
-        return destination;
+    public KompicsEvent getPayload() {
+        return payload;
     }
 }

@@ -1,23 +1,28 @@
 package se.kth.id2203.pp2p.event;
 
+import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
 
 import java.io.Serializable;
 
 /**
  * Created by ralambom on 11/02/17.
  */
-public abstract class Pp2pDeliver implements KompicsEvent, Serializable {
+public final class Pp2pDeliver implements KompicsEvent{
 
-    private static final long serialVersionUID = -314262496401376431L;
-    private Address source;
+    private NetAddress source;
+    private KompicsEvent payload;
 
-    public Pp2pDeliver(Address source) {
+    public Pp2pDeliver(NetAddress source, KompicsEvent payload) {
         this.source = source;
+        this.payload = payload;
     }
 
-    public Address getSource() {
+    public NetAddress getSource() {
         return source;
+    }
+
+    public KompicsEvent getPayload() {
+        return payload;
     }
 }

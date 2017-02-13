@@ -1,20 +1,20 @@
 package se.kth.id2203.epfd.event;
 
+import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
 
 /**
  * Created by ralambom on 12/02/17.
  */
 public class Restore implements KompicsEvent{
 
-    private final Address source;
+    private final NetAddress source;
 
-    public Restore(Address source) {
+    public Restore(NetAddress source) {
         this.source = source;
     }
 
-    public Address getSource() {
+    public NetAddress getSource() {
         return this.source;
     }
 
