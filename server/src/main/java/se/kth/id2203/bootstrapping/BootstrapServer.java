@@ -24,29 +24,23 @@
 package se.kth.id2203.bootstrapping;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.bootstrapping.BootstrapServer.State;
-import se.kth.id2203.epfd.component.Epfd;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.ClassMatchedHandler;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Start;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.CancelPeriodicTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timer;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class BootstrapServer extends ComponentDefinition {
 
@@ -59,11 +53,55 @@ public class BootstrapServer extends ComponentDefinition {
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     final int bootThreshold = config().getValue("id2203.project.bootThreshold", Integer.class);
-    private State state = State.COLLECTING;
-    private UUID timeoutId;
     private final Set<NetAddress> active = new HashSet<>();
+    protected final ClassMatchedHandler<CheckIn, Message> checkinHandler = new ClassMatchedHandler<CheckIn, Message>() {
+
+        @Override
+        public void handle(CheckIn content, Message context) {
+            if (active.add(context.getSource())) {
+                trigger(new ListenTo(active), epfd);
+            }
+            // TODO Test
+
+        }
+    };
     private final Set<NetAddress> ready = new HashSet<>();
-    private NodeAssignment initialAssignment = null;
+    protected final ClassMatchedHandler<Ready, Message> readyHandler = new ClassMatchedHandler<Ready, Message>() {
+        @Override
+        public void handle(Ready content, Message context) {
+            ready.add(context.getSource());
+        }
+    };
+    private State state = State.COLLECTING;
+    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
+        @Override
+        public void handle(Suspect suspect) {
+            LOG.debug("Bootstrap client {} is suspected.", suspect.getSource().toString());
+            if (state == State.COLLECTING) {
+                // Bootstrap Client is suspected to be dead => remove it from the Set
+                active.remove(suspect.getSource());
+            } else if (state == State.SEEDING) {
+                // nothing to do
+            } else if (state == State.DONE) {
+                // nothing to do
+            }
+        }
+    };
+    protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
+        @Override
+        public void handle(Restore restore) {
+            LOG.debug("Bootstrap client {} is restore.", restore.getSource().toString());
+            if (state == State.COLLECTING) {
+                // Bootstrap Client is restore  => add it in the Set
+                active.add(restore.getSource());
+            } else if (state == State.SEEDING) {
+                // nothing to do
+            } else if (state == State.DONE) {
+                // nothing to do
+            }
+        }
+    };
+    private UUID timeoutId;
     //******* Handlers ******
     protected final Handler<Start> startHandler = new Handler<Start>() {
         @Override
@@ -77,6 +115,7 @@ public class BootstrapServer extends ComponentDefinition {
             active.add(self);
         }
     };
+    private NodeAssignment initialAssignment = null;
     protected final Handler<BSTimeout> timeoutHandler = new Handler<BSTimeout>() {
         @Override
         public void handle(BSTimeout e) {
@@ -107,53 +146,6 @@ public class BootstrapServer extends ComponentDefinition {
                 trigger(new Message(self, node, new Boot(initialAssignment)), net);
             }
             ready.add(self);
-        }
-    };
-    protected final ClassMatchedHandler<CheckIn, Message> checkinHandler = new ClassMatchedHandler<CheckIn, Message>() {
-
-        @Override
-        public void handle(CheckIn content, Message context) {
-            if (active.add(context.getSource())) {
-                trigger(new ListenTo(active), epfd);
-            }
-            // TODO Test
-
-        }
-    };
-    protected final ClassMatchedHandler<Ready, Message> readyHandler = new ClassMatchedHandler<Ready, Message>() {
-        @Override
-        public void handle(Ready content, Message context) {
-            ready.add(context.getSource());
-        }
-    };
-
-    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
-        @Override
-        public void handle(Suspect suspect) {
-            LOG.debug("Bootstrap client {} is suspected.", suspect.getSource().toString());
-            if (state == State.COLLECTING) {
-                // Bootstrap Client is suspected to be dead => remove it from the Set
-                active.remove(suspect.getSource());
-            } else if (state == State.SEEDING) {
-                // nothing to do
-            } else if (state == State.DONE) {
-                // nothing to do
-            }
-        }
-    };
-
-    protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
-        @Override
-        public void handle(Restore restore) {
-            LOG.debug("Bootstrap client {} is restore.", restore.getSource().toString());
-            if (state == State.COLLECTING) {
-                // Bootstrap Client is restore  => add it in the Set
-                active.add(restore.getSource());
-            } else if (state == State.SEEDING) {
-                // nothing to do
-            } else if (state == State.DONE) {
-                // nothing to do
-            }
         }
     };
 

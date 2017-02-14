@@ -23,8 +23,9 @@
  */
 package se.kth.id2203.bootstrapping;
 
-import java.io.Serializable;
 import se.sics.kompics.KompicsEvent;
+
+import java.io.Serializable;
 
 public class Boot implements KompicsEvent, Serializable {
 

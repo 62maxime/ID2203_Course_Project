@@ -23,27 +23,20 @@
  */
 package se.kth.id2203.bootstrapping;
 
-import java.util.UUID;
-
-import javafx.geometry.Pos;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.ClassMatchedHandler;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Start;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.CancelPeriodicTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timer;
 
+import java.util.UUID;
+
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class BootstrapClient extends ComponentDefinition {
