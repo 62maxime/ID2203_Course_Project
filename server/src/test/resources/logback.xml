@@ -16,10 +16,12 @@
         </encoder>
     </appender> -->
 
-    
+    <!-- # LEVELS : TRACE, DEBUG, INFO, WARN, ERROR and FATAL # -->
     <logger name="Kompics" level="INFO"/>
     <logger name="se.sics.kompics.timer.java.JavaTimer" level="INFO"/>
     <logger name="se.kth.id2203" level="DEBUG"/>
+    <logger name="se.sics.kompics.simulator.core.impl.P2pSimulator" level="TRACE"/>
+    <logger name="se.sics.kompics.simulator.core.impl.SimulatorMngrComp" level="TRACE"/>
 
     <root level="TRACE">
         <appender-ref ref="CONSOLE"/>
