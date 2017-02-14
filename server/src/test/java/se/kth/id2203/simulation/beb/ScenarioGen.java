@@ -10,6 +10,7 @@ import se.sics.kompics.simulator.adaptor.Operation1;
 import se.sics.kompics.simulator.adaptor.Operation2;
 import se.sics.kompics.simulator.adaptor.distributions.ConstantDistribution;
 import se.sics.kompics.simulator.adaptor.distributions.extra.BasicIntSequentialDistribution;
+import se.sics.kompics.simulator.events.system.KillNodeEvent;
 import se.sics.kompics.simulator.events.system.StartNodeEvent;
 
 import java.net.InetAddress;
@@ -118,12 +119,35 @@ public class ScenarioGen {
         }
     };
 
-    public static SimulationScenario bebSimulation() {
+    static Operation1 killNode = new Operation1<KillNodeEvent, Integer>() {
+
+        @Override
+        public KillNodeEvent generate(final Integer self) {
+            return new KillNodeEvent() {
+                NetAddress selfAdr;
+
+                {
+                    try {
+                        selfAdr = new NetAddress(InetAddress.getByName("localhost"), 10000 + self);
+                    } catch (UnknownHostException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+                @Override
+                public Address getNodeAddress() {
+                    return this.selfAdr;
+                }
+            };
+        }
+    };
+
+    public static SimulationScenario bebSimulation(final int test) {
         SimulationScenario scen = new SimulationScenario() {
             {
                 SimulationScenario.StochasticProcess sender = new SimulationScenario.StochasticProcess() {
                     {
-                        eventInterArrivalTime(constant(1000));
+                        eventInterArrivalTime(constant(500));
                         raise(1, startSender, new BasicIntSequentialDistribution(0),
                                 new ConstantDistribution(Integer.class, 6));
                     }
@@ -131,15 +155,45 @@ public class ScenarioGen {
 
                 SimulationScenario.StochasticProcess recipients = new SimulationScenario.StochasticProcess() {
                     {
-                        eventInterArrivalTime(constant(1000));
+                        eventInterArrivalTime(constant(100));
                         raise(5, startRecipients, new BasicIntSequentialDistribution(1),
                                 new ConstantDistribution(Integer.class, 6));
                     }
                 };
 
-                recipients.start();
-                sender.startAfterTerminationOf(1000, recipients);
-                //terminateAfterTerminationOf(10000, recipients);
+
+                if (test == 1) {
+                    LOG.info("[BEB_BROADCAST] : TEST 1");
+
+                    recipients.start();
+                    sender.startAfterTerminationOf(100, recipients);
+                    //terminateAfterTerminationOf(10000, recipients);
+                } else if (test == 2) {
+                    LOG.info("[BEB_BROADCAST] : TEST 2");
+                    SimulationScenario.StochasticProcess killRecipient = new SimulationScenario.StochasticProcess() {
+                        {
+                            eventInterArrivalTime(constant(100));
+                            raise(1, killNode, new ConstantDistribution(Integer.class, 2));
+                        }
+                    };
+
+                    recipients.start();
+                    sender.startAfterTerminationOf(3000, recipients);
+                    killRecipient.startAfterTerminationOf(200, recipients);
+
+                } else {
+                    LOG.info("[BEB_BROADCAST] : TEST 3");
+                    SimulationScenario.StochasticProcess killSender = new SimulationScenario.StochasticProcess() {
+                        {
+                            eventInterArrivalTime(constant(10));
+                            raise(1, killNode, new ConstantDistribution(Integer.class, 0));
+                        }
+                    };
+
+                    recipients.start();
+                    sender.startAfterTerminationOf(100, recipients);
+                    killSender.startAfterStartOf(5, sender);
+                }
             }
         };
 

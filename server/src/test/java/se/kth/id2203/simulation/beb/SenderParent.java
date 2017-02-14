@@ -30,6 +30,7 @@ public class SenderParent extends ComponentDefinition {
 
         connect(sender.getNegative(BebPort.class), beb.getPositive(BebPort.class), Channel.TWO_WAY);
         connect(beb.getNegative(Network.class), network, Channel.TWO_WAY);
+        connect(sender.getNegative(Timer.class), timer, Channel.TWO_WAY);
     }
 
     public static class Init extends se.sics.kompics.Init<SenderParent> {
