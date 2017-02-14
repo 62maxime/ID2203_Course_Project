@@ -94,6 +94,37 @@ public class Console implements Runnable {
                 return "Just a test operation...replace with proper put get";
             }
         });
+        commands.put("get", new Command() {
+
+            @Override
+            public boolean execute(String[] cmdline, ClientService worker) {
+                if (cmdline.length == 2) {
+                    Future<GetResponse> fr = worker.get(cmdline[1]);
+                    out.println("Operation sent! Awaiting response...");
+                    try {
+                        GetResponse r = fr.get();
+                        out.println("Operation complete! Response was: " + r.status);
+                        return true;
+                    } catch (InterruptedException | ExecutionException ex) {
+                        ex.printStackTrace(out);
+                        return false;
+                    }
+
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String usage() {
+                return "get <key>";
+            }
+
+            @Override
+            public String help() {
+                return "Get the value of the key";
+            }
+        });
         commands.put("help", new Command() {
 
             @Override

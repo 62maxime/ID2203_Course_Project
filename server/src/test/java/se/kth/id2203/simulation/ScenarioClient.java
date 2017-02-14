@@ -28,6 +28,8 @@ import java.util.TreeMap;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.kvstore.GetRequest;
+import se.kth.id2203.kvstore.GetResponse;
 import se.kth.id2203.kvstore.OpResponse;
 import se.kth.id2203.kvstore.Operation;
 import se.kth.id2203.networking.Message;
@@ -63,7 +65,7 @@ public class ScenarioClient extends ComponentDefinition {
         public void handle(Start event) {
             int messages = res.get("messages", Integer.class);
             for (int i = 0; i < messages; i++) {
-                Operation op = new Operation("test" + i);
+                GetRequest op = new GetRequest("test" + i);
                 RouteMsg rm = new RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
                 trigger(new Message(self, server, rm), net);
                 pending.put(op.id, op.key);
@@ -86,8 +88,23 @@ public class ScenarioClient extends ComponentDefinition {
         }
     };
 
+    protected final ClassMatchedHandler<GetResponse, Message> getResponseHandler = new ClassMatchedHandler<GetResponse, Message>() {
+
+        @Override
+        public void handle(GetResponse content, Message context) {
+            LOG.debug("Got GetResponse: {}", content);
+            String key = pending.remove(content.id);
+            if (key != null) {
+                res.put(key, content.status.toString());
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+        }
+    };
+
     {
         subscribe(startHandler, control);
         subscribe(responseHandler, net);
+        subscribe(getResponseHandler, net);
     }
 }
