@@ -113,9 +113,11 @@ public class BootstrapServer extends ComponentDefinition {
 
         @Override
         public void handle(CheckIn content, Message context) {
-            active.add(context.getSource());
+            if (active.add(context.getSource())) {
+                trigger(new ListenTo(active), epfd);
+            }
             // TODO Test
-            trigger(new ListenTo(active), epfd);
+
         }
     };
     protected final ClassMatchedHandler<Ready, Message> readyHandler = new ClassMatchedHandler<Ready, Message>() {

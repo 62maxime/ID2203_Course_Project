@@ -103,15 +103,16 @@ public class Epfd extends ComponentDefinition {
     private Handler<HeartbeatRequest> heartbeatReqHandler = new Handler<HeartbeatRequest>() {
         @Override
         public void handle(HeartbeatRequest heartbeatRequest) {
-            LOG.debug("Heartbeat request from " + heartbeatRequest.getSource());
-            trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), seqnum),pLink);
+            LOG.debug(self.toString() + " receives a heartbeat request from " + heartbeatRequest.getSource());
+            trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), heartbeatRequest.getSeqnum()),pLink);
         }
     };
 
     private Handler<HeartbeatReply> heartbeatRepHandler = new Handler<HeartbeatReply>() {
         @Override
         public void handle(HeartbeatReply heartbeatReply) {
-            LOG.debug("Heartbeat Repky from " + heartbeatReply.getSource());
+            LOG.debug(self.toString() + " receives a heartbeat reply from " + heartbeatReply.getSource()
+                    + "with seqnum " + heartbeatReply.getSeqnum() + " internal " + seqnum);
 
             if(topology.contains(heartbeatReply.getSource())) {
                 if (heartbeatReply.getSeqnum() == seqnum || suspected.contains(heartbeatReply.getSource())) {

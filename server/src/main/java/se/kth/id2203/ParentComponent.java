@@ -13,6 +13,7 @@ import se.kth.id2203.kvstore.KVService;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
+import se.kth.id2203.pp2p.component.PerfectPointToPointLink;
 import se.sics.kompics.Channel;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
@@ -38,13 +39,12 @@ public class ParentComponent
     //******* Children ******
     protected final Component overlay = create(VSOverlayManager.class, Init.NONE);
     protected final Component kv = create(KVService.class, Init.NONE);
-
     protected final Component epfd ;
     protected final Component boot;
 
     {
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
-        EpfdInit init = new EpfdInit(self,(long) 10,(long) 40);
+        EpfdInit init = new EpfdInit(self,(long) 100000, 400000);
         epfd = create(Epfd.class, init);
         Optional<NetAddress> serverO = config().readValue("id2203.project.bootstrap-address", NetAddress.class);
         if (serverO.isPresent()) { // start in client mode
@@ -66,5 +66,8 @@ public class ParentComponent
         connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
                 overlay.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
         connect(net, epfd.getNegative(Network.class), Channel.TWO_WAY);
+        connect(timer, epfd.getNegative(Timer.class), Channel.TWO_WAY);
+
+
     }
 }
