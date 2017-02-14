@@ -29,10 +29,10 @@ public class BestEffortBroadcast extends ComponentDefinition {
     private final Set<NetAddress> topology;
     //******* Handlers ******
     protected final Handler<BebRequest> requestHandler = new Handler<BebRequest>() {
-
         @Override
         public void handle(BebRequest bebRequest) {
             LOG.info("[BebBroadcast] BebRequest received by " + self.toString());
+            LOG.info("[BebBroadcast] Topology = " + topology.toString());
             for (NetAddress adr : topology) {
                 trigger(new Message(self, adr, bebRequest.payload), net);
                 LOG.info("[BebBroadcast] Payload sent to " + adr.toString());
@@ -44,7 +44,7 @@ public class BestEffortBroadcast extends ComponentDefinition {
     protected final Handler<Message> deliverHandler = new Handler<Message>() {
         @Override
         public void handle(Message payload) {
-            LOG.info("[BebBroadcast] Pp2pDeliver received");
+            LOG.info("[BebBroadcast] Network message received by " + self.toString());
             BebDeliver bebDeliver = new BebDeliver(payload.getSource(), payload.payload);
             trigger(bebDeliver, beb);
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
