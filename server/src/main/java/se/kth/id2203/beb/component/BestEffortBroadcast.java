@@ -7,10 +7,8 @@ import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
+import se.kth.id2203.overlay.Connect;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 
 import java.util.Set;
@@ -34,18 +32,17 @@ public class BestEffortBroadcast extends ComponentDefinition {
             LOG.info("[BebBroadcast] BebRequest received by " + self.toString());
             LOG.info("[BebBroadcast] Topology = " + topology.toString());
             for (NetAddress adr : topology) {
-                trigger(new Message(self, adr, bebRequest.payload), net);
+                trigger(new Message(self, adr, bebRequest), net);
                 LOG.info("[BebBroadcast] Payload sent to " + adr.toString());
             }
         }
     };
 
-
-    protected final Handler<Message> deliverHandler = new Handler<Message>() {
+    protected final ClassMatchedHandler<BebRequest, Message> deliverHandler = new ClassMatchedHandler<BebRequest, Message>() {
         @Override
-        public void handle(Message payload) {
-            LOG.info("[BebBroadcast] Network message received by " + self.toString());
-            BebDeliver bebDeliver = new BebDeliver(payload.getSource(), payload.payload);
+        public void handle(BebRequest bebRequest, Message message) {
+            LOG.info("[BebBroadcast] Network message from " + message.getSource() + " received by " + self.toString());
+            BebDeliver bebDeliver = new BebDeliver(message.getSource(), bebRequest.payload);
             trigger(bebDeliver, beb);
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
