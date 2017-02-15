@@ -48,7 +48,7 @@ public class Epfd extends ComponentDefinition {
 
     public Epfd(EpfdInit init) {
         this.self = init.getSelfAddress();
-        this.topology.add(init.getSelfAddress());
+        //this.topology.add(init.getSelfAddress());
         this.delta = init.getDelta();
 
         this.period = init.getInitialPeriod();
@@ -142,10 +142,10 @@ public class Epfd extends ComponentDefinition {
             alive.clear();
 
             self = reset.getInit().getSelfAddress();
-            topology.add(reset.getInit().getSelfAddress());
+            //topology.add(reset.getInit().getSelfAddress());
             delta = reset.getInit().getDelta();
             period = reset.getInit().getInitialPeriod();
-            alive.add(reset.getInit().getSelfAddress());
+            //alive.add(reset.getInit().getSelfAddress());
 
             startTimer(period);
         }

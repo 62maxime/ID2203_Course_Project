@@ -142,14 +142,18 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
         @Override
         public void handle(Suspect suspect) {
-            replicationGroup.removeNode((NetAddress) suspect.getSource());
+            if (replicationGroup != null) {
+                replicationGroup.removeNode((NetAddress) suspect.getSource());
+            }
         }
     };
 
     protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
         @Override
         public void handle(Restore restore) {
-            replicationGroup.addNode((NetAddress) restore.getSource());
+            if (replicationGroup != null) {
+                replicationGroup.addNode((NetAddress) restore.getSource());
+            }
         }
     };
 

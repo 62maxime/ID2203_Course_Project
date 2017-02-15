@@ -24,6 +24,9 @@
 package se.kth.id2203.bootstrapping;
 
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.epfd.component.EpfdInit;
+import se.kth.id2203.epfd.event.ListenTo;
+import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
@@ -34,6 +37,8 @@ import se.sics.kompics.timer.CancelPeriodicTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timer;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -71,6 +76,9 @@ public class BootstrapClient extends ComponentDefinition {
             spt.setTimeoutEvent(new BSTimeout(spt));
             trigger(spt, timer);
             timeoutId = spt.getTimeoutEvent().getTimeoutId();
+            Set<NetAddress> netAddresses = new HashSet<>();
+            netAddresses.add(server);
+            trigger(new ListenTo(netAddresses), epfd);
         }
     };
     protected final Handler<BSTimeout> timeoutHandler = new Handler<BSTimeout>() {
@@ -105,7 +113,8 @@ public class BootstrapClient extends ComponentDefinition {
         @Override
         public void handle(Suspect suspect) {
             // Bootstrap server is suspected to be dead => suicide
-            LOG.debug("Bootstrap server is suspected.");
+            LOG.debug("Bootstrap server" + server.toString() + " is suspected.");
+            trigger(new Reset(new EpfdInit(self, 1000,4000 )), epfd);
             suicide();
         }
     };

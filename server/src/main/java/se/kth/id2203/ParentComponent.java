@@ -44,7 +44,7 @@ public class ParentComponent
 
     {
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
-        EpfdInit init = new EpfdInit(self,(long) 100000, 400000);
+        EpfdInit init = new EpfdInit(self,(long) 1000, 4000);
         epfd = create(Epfd.class, init);
         Optional<NetAddress> serverO = config().readValue("id2203.project.bootstrap-address", NetAddress.class);
         if (serverO.isPresent()) { // start in client mode

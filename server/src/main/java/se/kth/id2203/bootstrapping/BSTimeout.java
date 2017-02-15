@@ -27,7 +27,6 @@ import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timeout;
 
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class BSTimeout extends Timeout {
