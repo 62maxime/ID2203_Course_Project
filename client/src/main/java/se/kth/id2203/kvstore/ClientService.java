@@ -111,10 +111,26 @@ public class ClientService extends ComponentDefinition {
             pending.put(event.op.id, event.f);
         }
     };
+
+
     protected final ClassMatchedHandler<OpResponse, Message> responseHandler = new ClassMatchedHandler<OpResponse, Message>() {
         
         @Override
         public void handle(OpResponse content, Message context) {
+            LOG.debug("Got OpResponse: {}", content);
+            SettableFuture<OpResponse> sf = pending.remove(content.id);
+            if (sf != null) {
+                sf.set(content);
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+        }
+    };
+
+    protected final ClassMatchedHandler<GetResponse, Message> getResponseHandler = new ClassMatchedHandler<GetResponse, Message>() {
+
+        @Override
+        public void handle(GetResponse content, Message context) {
             LOG.debug("Got OpResponse: {}", content);
             SettableFuture<OpResponse> sf = pending.remove(content.id);
             if (sf != null) {
@@ -131,6 +147,7 @@ public class ClientService extends ComponentDefinition {
         subscribe(connectHandler, net);
         subscribe(opHandler, loopback);
         subscribe(responseHandler, net);
+        subscribe(getResponseHandler, net);
     }
     
     Future<OpResponse> op(String key) {
@@ -139,9 +156,9 @@ public class ClientService extends ComponentDefinition {
         trigger(owf, onSelf);
         return owf.f;
     }
-    Future<GetResponse> get(String key) {
+    Future<OpResponse> get(String key) {
         GetRequest op = new GetRequest(key);
-        getWithFuture owf = new getWithFuture(op);
+        OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
@@ -152,16 +169,6 @@ public class ClientService extends ComponentDefinition {
         public final SettableFuture<OpResponse> f;
         
         public OpWithFuture(Operation op) {
-            this.op = op;
-            this.f = SettableFuture.create();
-        }
-    }
-    public static class getWithFuture implements KompicsEvent {
-
-        public final Operation op;
-        public final SettableFuture<GetResponse> f;
-
-        public getWithFuture(Operation op) {
             this.op = op;
             this.f = SettableFuture.create();
         }

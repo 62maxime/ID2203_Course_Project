@@ -15,20 +15,11 @@ import se.kth.id2203.kvstore.KVServiceInit;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
-import se.kth.id2203.pp2p.component.PerfectPointToPointLink;
-import se.sics.kompics.Channel;
-import se.sics.kompics.Component;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Init;
-import se.sics.kompics.Positive;
-import se.sics.kompics.network.Address;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
-import sun.rmi.runtime.Log;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ParentComponent
         extends ComponentDefinition {

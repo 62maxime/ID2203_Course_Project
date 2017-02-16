@@ -82,7 +82,7 @@ public class VSOverlayManager extends ComponentDefinition {
             LookupTable lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
             LOG.debug("Generated assignments:\n{}", lut);
             replicationGroup = lut.getKey(self);
-            trigger(new Reset(new EpfdInit(self, 10, 40)), epfd);
+            trigger(new Reset(new EpfdInit(self, 1000, 4000)), epfd);
             trigger(new ListenTo(replicationGroup.getNodes()), epfd);
             trigger(new InitialAssignments(lut), boot);
         }
@@ -96,7 +96,7 @@ public class VSOverlayManager extends ComponentDefinition {
                 lut = (LookupTable) event.assignment;
                 replicationGroup = lut.getKey(self);
                 // TODO Test
-                trigger(new Reset(new EpfdInit(self, 100000, 400000)), epfd);
+                trigger(new Reset(new EpfdInit(self, 1000, 4000)), epfd);
                 trigger(new ListenTo(replicationGroup.getNodes()), epfd);
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());

@@ -69,12 +69,14 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(GetRequest content, Message context) {
-            LOG.info("Got operation {}! Key {} Store {}", content, content.key.hashCode(), store.toString());
+            LOG.info("Got operation {}!", content);
             KVEntry value = store.get(content.key.hashCode());
             if (value == null) {
+                LOG.info("{} NOT_FOUND!", content);
                 GetResponse getResponse = new GetResponse(content.id, Code.NOT_FOUND, value);
                 trigger(new Message(self, context.getSource(), getResponse), net);
             } else  {
+                LOG.info("{} OK!", content);
                 trigger(new Message(self, context.getSource(), new GetResponse(content.id, Code.OK, value)), net);
             }
 
