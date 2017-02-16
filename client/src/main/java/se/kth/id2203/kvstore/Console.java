@@ -99,11 +99,11 @@ public class Console implements Runnable {
             @Override
             public boolean execute(String[] cmdline, ClientService worker) {
                 if (cmdline.length == 2) {
-                    Future<GetResponse> fr = worker.get(cmdline[1]);
+                    Future<OpResponse> fr = worker.get(cmdline[1]);
                     out.println("Operation sent! Awaiting response...");
                     try {
-                        GetResponse r = fr.get();
-                        out.println("Operation complete! Response was: " + r.status);
+                        GetResponse r = (GetResponse) fr.get();
+                        out.println("Operation complete! Response was: " + r.getValue());
                         return true;
                     } catch (InterruptedException | ExecutionException ex) {
                         ex.printStackTrace(out);
