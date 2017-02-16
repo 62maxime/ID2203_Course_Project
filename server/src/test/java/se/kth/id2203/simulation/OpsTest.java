@@ -34,7 +34,8 @@ import se.sics.kompics.simulator.run.LauncherComp;
  */
 public class OpsTest {
     
-    private static final int NUM_MESSAGES = 10;
+    private static final int NUM_MESSAGES_OK = 3;
+    private static final int NUM_MESSAGES_NOT_FOUND = 7;
     private final SimulationResultMap res = SimulationResultSingleton.getInstance();
 
     @Test
@@ -42,10 +43,13 @@ public class OpsTest {
         long seed = 123;
         SimulationScenario.setSeed(seed);
         SimulationScenario simpleBootScenario = ScenarioGen.simpleOps(6);
-        res.put("messages", NUM_MESSAGES);
+        res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND);
         simpleBootScenario.simulate(LauncherComp.class);
-        for (int i = 0; i < NUM_MESSAGES; i++) {
+        for (int i = 0; i < NUM_MESSAGES_OK; i++) {
             Assert.assertEquals("OK", res.get("test"+i, String.class));
+        }
+        for (int i = NUM_MESSAGES_OK; i < NUM_MESSAGES_NOT_FOUND + NUM_MESSAGES_OK; i++) {
+            Assert.assertEquals("NOT_FOUND", res.get("test"+i, String.class));
         }
     }
 

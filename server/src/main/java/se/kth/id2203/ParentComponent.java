@@ -9,7 +9,9 @@ import se.kth.id2203.bootstrapping.Bootstrapping;
 import se.kth.id2203.epfd.component.Epfd;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
+import se.kth.id2203.kvstore.KVEntry;
 import se.kth.id2203.kvstore.KVService;
+import se.kth.id2203.kvstore.KVServiceInit;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
@@ -24,6 +26,7 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import sun.rmi.runtime.Log;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,11 +41,19 @@ public class ParentComponent
     protected final Positive<Timer> timer = requires(Timer.class);
     //******* Children ******
     protected final Component overlay = create(VSOverlayManager.class, Init.NONE);
-    protected final Component kv = create(KVService.class, Init.NONE);
-    protected final Component epfd ;
+    protected final Component kv;
+    protected final Component epfd;
     protected final Component boot;
 
     {
+        HashMap<Integer, KVEntry> store = new HashMap<>();
+        store.put(Integer.MAX_VALUE - 1, new KVEntry(Integer.MAX_VALUE - 1, 42));
+        store.put(Integer.MAX_VALUE/2, new KVEntry(Integer.MAX_VALUE/2, 41));
+        store.put("test0".hashCode(), new KVEntry("test0".hashCode(), 41));
+        store.put("test1".hashCode(), new KVEntry("test1".hashCode(), 41));
+        store.put("test2".hashCode(), new KVEntry("test2".hashCode(), 41));
+        kv = create(KVService.class, new KVServiceInit(store));
+
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
         EpfdInit init = new EpfdInit(self,(long) 1000, 4000);
         epfd = create(Epfd.class, init);
