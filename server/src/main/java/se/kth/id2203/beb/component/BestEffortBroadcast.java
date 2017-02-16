@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
+import se.kth.id2203.beb.event.BebTopology;
 import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
@@ -24,7 +25,7 @@ public class BestEffortBroadcast extends ComponentDefinition {
     protected final Positive<Network> net = requires(Network.class);
     //******* Fields ******
     private final NetAddress self;
-    private final Set<NetAddress> topology;
+    private Set<NetAddress> topology;
     //******* Handlers ******
     protected final Handler<BebRequest> requestHandler = new Handler<BebRequest>() {
         @Override
@@ -45,6 +46,15 @@ public class BestEffortBroadcast extends ComponentDefinition {
             BebDeliver bebDeliver = new BebDeliver(message.getSource(), bebRequest.payload);
             trigger(bebDeliver, beb);
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
+        }
+    };
+
+    protected final Handler<BebTopology> topologyHandler = new Handler<BebTopology>() {
+        @Override
+        public void handle(BebTopology bebTopology) {
+            LOG.debug("[BebBroadcast] BebTopology event received by " + self.toString());
+            topology = bebTopology.getTopology();
+            LOG.debug("[BebBroadcast]New topology = " + topology.toString());
         }
     };
 
