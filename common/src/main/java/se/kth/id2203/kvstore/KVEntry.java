@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by 62maxime on 16/02/2017.
  */
-public class KVEntry implements Serializable{
+public class KVEntry implements Serializable {
 
     private Integer key;
     private Integer value;

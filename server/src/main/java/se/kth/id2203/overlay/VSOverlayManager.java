@@ -24,8 +24,6 @@
 package se.kth.id2203.overlay;
 
 import com.larskroll.common.J6;
-import java.util.Collection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.Booted;
@@ -40,13 +38,11 @@ import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.ClassMatchedHandler;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
+
+import java.util.Collection;
 
 /**
  * The V(ery)S(imple)OverlayManager.
@@ -56,6 +52,7 @@ import se.sics.kompics.timer.Timer;
  * Note: This implementation does not fulfill the project task. You have to
  * support multiple partitions!
  * <p>
+ *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class VSOverlayManager extends ComponentDefinition {
@@ -71,6 +68,7 @@ public class VSOverlayManager extends ComponentDefinition {
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private LookupTable lut = null;
     private ReplicationGroup replicationGroup;
+    private boolean booted = false;
     //******* Handlers ******
     protected final Handler<GetInitialAssignments> initialAssignmentHandler = new Handler<GetInitialAssignments>() {
 
@@ -81,9 +79,7 @@ public class VSOverlayManager extends ComponentDefinition {
             LOG.info("Generating LookupTable...");
             LookupTable lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
             LOG.debug("Generated assignments:\n{}", lut);
-            replicationGroup = lut.getKey(self);
-            trigger(new Reset(new EpfdInit(self, 1000, 4000)), epfd);
-            trigger(new ListenTo(replicationGroup.getNodes()), epfd);
+            initEpfd();
             trigger(new InitialAssignments(lut), boot);
         }
     };
@@ -94,10 +90,7 @@ public class VSOverlayManager extends ComponentDefinition {
             if (event.assignment instanceof LookupTable) {
                 LOG.info("Got NodeAssignment, overlay ready.");
                 lut = (LookupTable) event.assignment;
-                replicationGroup = lut.getKey(self);
-                // TODO Test
-                trigger(new Reset(new EpfdInit(self, 1000, 4000)), epfd);
-                trigger(new ListenTo(replicationGroup.getNodes()), epfd);
+                initEpfd();
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());
             }
@@ -142,8 +135,8 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
         @Override
         public void handle(Suspect suspect) {
-            if (replicationGroup != null) {
-                replicationGroup.removeNode((NetAddress) suspect.getSource());
+            if (booted) {
+                replicationGroup.removeNode(suspect.getSource()); // TODO change when we listen to everybody
             }
         }
     };
@@ -151,11 +144,20 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
         @Override
         public void handle(Restore restore) {
-            if (replicationGroup != null) {
-                replicationGroup.addNode((NetAddress) restore.getSource());
+            if (booted) {
+                replicationGroup.addNode(restore.getSource()); // TODO change when we listen to everybody
             }
         }
     };
+
+    private void initEpfd() {
+        Integer delta = config().getValue("id2203.project.EpfdDelta", Integer.class);
+        Integer period = config().getValue("id2203.project.EpfdPeriod", Integer.class);
+        replicationGroup = lut.getKey(self);
+        trigger(new Reset(new EpfdInit(self, delta, period)), epfd);
+        trigger(new ListenTo(replicationGroup.getNodes()), epfd); // TODO listen to the whole group for BEB
+        booted = true;
+    }
 
     {
         subscribe(initialAssignmentHandler, boot);

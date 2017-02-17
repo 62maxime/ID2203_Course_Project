@@ -46,7 +46,9 @@ public class ParentComponent
         kv = create(KVService.class, new KVServiceInit(store));
 
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
-        EpfdInit init = new EpfdInit(self,(long) 1000, 4000);
+        Integer delta = config().getValue("id2203.project.EpfdDelta", Integer.class);
+        Integer period = config().getValue("id2203.project.EpfdPeriod", Integer.class);
+        EpfdInit init = new EpfdInit(self, delta, period);
         epfd = create(Epfd.class, init);
         Optional<NetAddress> serverO = config().readValue("id2203.project.bootstrap-address", NetAddress.class);
         if (serverO.isPresent()) { // start in client mode
