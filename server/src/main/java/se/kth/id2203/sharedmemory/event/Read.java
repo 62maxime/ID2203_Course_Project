@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Created by 62maxime on 17/02/2017.
  */
-public class Read implements KompicsEvent, Serializable  {
+public class Read implements KompicsEvent, Serializable {
 
     private int rid;
 

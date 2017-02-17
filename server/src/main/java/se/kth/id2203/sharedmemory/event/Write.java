@@ -1,6 +1,5 @@
 package se.kth.id2203.sharedmemory.event;
 
-import com.google.common.base.Optional;
 import se.kth.id2203.kvstore.KVEntry;
 import se.sics.kompics.KompicsEvent;
 
@@ -14,9 +13,9 @@ public class Write implements KompicsEvent, Serializable {
     private int rid;
     private int ts;
     private int wr;
-    private Optional<KVEntry> writeValue;
+    private KVEntry writeValue;
 
-    public Write(int rid, int ts, int wr, Optional<KVEntry> writeValue) {
+    public Write(int rid, int ts, int wr, KVEntry writeValue) {
         this.rid = rid;
         this.ts = ts;
         this.wr = wr;
@@ -35,7 +34,7 @@ public class Write implements KompicsEvent, Serializable {
         return wr;
     }
 
-    public Optional<KVEntry> getWriteValue() {
+    public KVEntry getWriteValue() {
         return writeValue;
     }
 }

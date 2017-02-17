@@ -9,15 +9,21 @@ import se.sics.kompics.Init;
 public class RIWCInit extends Init<RIWC> {
 
     private NetAddress self;
+    private int n;
     private int selfRank;
 
-    public RIWCInit(NetAddress self, int selfRank) {
+    public RIWCInit(NetAddress self, int n, int selfRank) {
         this.self = self;
+        this.n = n;
         this.selfRank = selfRank;
     }
 
     public NetAddress getSelf() {
         return self;
+    }
+
+    public int getN() {
+        return n;
     }
 
     public int getSelfRank() {
