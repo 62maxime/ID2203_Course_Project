@@ -103,6 +103,7 @@ public class LookupTable implements NodeAssignment {
     }
 
 
-
-
+    public TreeMultimap<Integer, NetAddress> getPartitions() {
+        return partitions;
+    }
 }
