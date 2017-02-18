@@ -26,6 +26,7 @@ package se.kth.id2203.kvstore;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.Future;
@@ -158,6 +159,12 @@ public class ClientService extends ComponentDefinition {
     }
     Future<OpResponse> get(String key) {
         GetRequest op = new GetRequest(key);
+        OpWithFuture owf = new OpWithFuture(op);
+        trigger(owf, onSelf);
+        return owf.f;
+    }
+    Future<OpResponse> put(String key, String value) {
+        PutRequest op = new PutRequest(key, new KVEntry(key.hashCode(), Integer.parseInt(value)));
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;

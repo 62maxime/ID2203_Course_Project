@@ -125,6 +125,41 @@ public class Console implements Runnable {
                 return "Get the value of the key";
             }
         });
+        commands.put("put", new Command() {
+            @Override
+            public boolean execute(String[] cmdline, ClientService worker) {
+                if (cmdline.length == 3) {
+                    Future<OpResponse> fr = worker.put(cmdline[1], cmdline[2]);
+                    out.println("Operation sent! Awaiting response...");
+                    try {
+                        OpResponse response = fr.get();
+                        if (response instanceof PutResponse) {
+                            PutResponse r = (PutResponse) response;
+                            out.println("Operation complete!");
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (InterruptedException | ExecutionException ex) {
+                        ex.printStackTrace(out);
+                        return false;
+                    }
+
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String usage() {
+                return "put <key> <value>";
+            }
+
+            @Override
+            public String help() {
+                return "Put the value in the key-value store";
+            }
+        });
         commands.put("help", new Command() {
 
             @Override
