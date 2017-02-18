@@ -39,7 +39,7 @@ public class ParentComponent
     protected final Positive<Timer> timer = requires(Timer.class);
     //******* Children ******
     protected final Component overlay = create(VSOverlayManager.class, Init.NONE);
-    protected final Component kv;
+    protected final Component kv = create(KVService.class, new KVServiceInit());
     protected final Component epfd;
     protected final Component boot;
     protected final Component beb = create(BestEffortBroadcast.class, new BebInit(self, new HashSet<NetAddress>()));
@@ -48,11 +48,10 @@ public class ParentComponent
     {
         HashMap<Integer, KVEntry> store = new HashMap<>();
         store.put(Integer.MAX_VALUE - 1, new KVEntry(Integer.MAX_VALUE - 1, 42));
-        store.put(Integer.MAX_VALUE/2, new KVEntry(Integer.MAX_VALUE/2, 37));
+        store.put(Integer.MAX_VALUE / 2, new KVEntry(Integer.MAX_VALUE / 2, 37));
         store.put("test0".hashCode(), new KVEntry("test0".hashCode(), 41));
         store.put("test1".hashCode(), new KVEntry("test1".hashCode(), 40));
         store.put("test2".hashCode(), new KVEntry("test2".hashCode(), 39));
-        kv = create(KVService.class, new KVServiceInit(store));
         riwc = create(RIWC.class, new RIWCInit(self, 1, self.hashCode(), store));
 
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
@@ -89,7 +88,6 @@ public class ParentComponent
         connect(net, riwc.getNegative(Network.class), Channel.TWO_WAY);
         // BEB
         connect(net, beb.getNegative(Network.class), Channel.TWO_WAY);
-
 
 
     }
