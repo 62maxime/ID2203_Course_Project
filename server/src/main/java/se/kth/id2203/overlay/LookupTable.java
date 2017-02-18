@@ -76,7 +76,7 @@ public class LookupTable implements NodeAssignment {
         return sb.toString();
     }
 
-    static LookupTable generate(ImmutableSet<NetAddress> nodes, int partitionGroupNumber, int replicationDelta) {
+    public static LookupTable generate(ImmutableSet<NetAddress> nodes, int partitionGroupNumber, int replicationDelta) {
         LookupTable lut = new LookupTable();
         Random random = new Random();
         HashSet<NetAddress> netAddresses = new HashSet<>(nodes);
