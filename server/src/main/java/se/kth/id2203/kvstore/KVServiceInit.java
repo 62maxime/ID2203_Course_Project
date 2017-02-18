@@ -9,13 +9,9 @@ import java.util.HashMap;
  */
 public class KVServiceInit extends Init<KVService> {
 
-    private HashMap<Integer, KVEntry> store;
 
-    public KVServiceInit(HashMap<Integer, KVEntry> store) {
-        this.store = store;
+    public KVServiceInit() {
+
     }
 
-    public HashMap<Integer, KVEntry> getStore() {
-        return store;
-    }
 }

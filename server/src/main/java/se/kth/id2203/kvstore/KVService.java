@@ -55,12 +55,10 @@ public class KVService extends ComponentDefinition {
     protected final Positive<ReadImposeWriteConsult> riwc = requires(ReadImposeWriteConsult.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
-    private HashMap<Integer, KVEntry> store;
     private HashMap<UUID, NetAddress> pending;
 
     //******* Constructor ******
     public KVService(KVServiceInit init) {
-        this.store = init.getStore();
         this.pending = new HashMap<>();
     }
 
