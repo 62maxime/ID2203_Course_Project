@@ -101,7 +101,7 @@ public class KVService extends ComponentDefinition {
                 trigger(new AR_Write_Request(content.id, content.key.hashCode(), content.getValue()), riwc);
                 pending.addFirst(context);
             } else {
-                LOG.info("Got operation -> Pending");
+                LOG.info("Got operation -> Pending {}", content.id);
                 pending.addLast(context);
             }
 
@@ -135,6 +135,9 @@ public class KVService extends ComponentDefinition {
         }
     };
 
+    /**
+     * Ensure that only one operation is done per process
+     */
     private final void nextTask() {
         busy = false;
         if (pending.isEmpty()){
@@ -149,7 +152,7 @@ public class KVService extends ComponentDefinition {
             LOG.info("Pending -> PutRequest");
             putHandler.handle((PutRequest) o, message);
         } else {
-            LOG.info("Pending -> Bad");
+            LOG.info("Pending -> None");
         }
 
     }
