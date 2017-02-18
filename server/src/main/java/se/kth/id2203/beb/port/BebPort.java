@@ -2,6 +2,7 @@ package se.kth.id2203.beb.port;
 
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
+import se.kth.id2203.beb.event.BebTopology;
 import se.sics.kompics.PortType;
 
 /**
@@ -11,5 +12,6 @@ public class BebPort extends PortType {
     {
         indication(BebDeliver.class);
         request(BebRequest.class);
+        request(BebTopology.class);
     }
 }
