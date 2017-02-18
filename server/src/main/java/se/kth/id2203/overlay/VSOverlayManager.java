@@ -38,6 +38,7 @@ import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
+import se.kth.id2203.sharedmemory.event.Topology;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
@@ -156,6 +157,7 @@ public class VSOverlayManager extends ComponentDefinition {
         replicationGroup = lut.getKey(self);
         trigger(new Reset(new EpfdInit(self, delta, period)), epfd);
         trigger(new ListenTo(replicationGroup.getNodes()), epfd); // TODO listen to the whole group for BEB
+        trigger(new Message(self, self, new Topology(replicationGroup.getNodes())), net);
         booted = true;
     }
 

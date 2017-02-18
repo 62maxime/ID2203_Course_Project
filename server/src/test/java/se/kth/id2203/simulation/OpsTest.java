@@ -34,8 +34,8 @@ import se.sics.kompics.simulator.run.LauncherComp;
  */
 public class OpsTest {
     
-    private static final int NUM_MESSAGES_OK = 3;
-    private static final int NUM_MESSAGES_NOT_FOUND = 7;
+    private static final int NUM_MESSAGES_OK = 1;
+    private static final int NUM_MESSAGES_NOT_FOUND = 0;
     private final SimulationResultMap res = SimulationResultSingleton.getInstance();
 
     @Test
