@@ -141,6 +141,19 @@ public class ClientService extends ComponentDefinition {
             }
         }
     };
+    protected final ClassMatchedHandler<PutResponse, Message> putResponseHandler = new ClassMatchedHandler<PutResponse, Message>() {
+
+        @Override
+        public void handle(PutResponse content, Message context) {
+            LOG.debug("Got OpResponse: {}", content);
+            SettableFuture<OpResponse> sf = pending.remove(content.id);
+            if (sf != null) {
+                sf.set(content);
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+        }
+    };
     
     {
         subscribe(startHandler, control);
@@ -149,6 +162,7 @@ public class ClientService extends ComponentDefinition {
         subscribe(opHandler, loopback);
         subscribe(responseHandler, net);
         subscribe(getResponseHandler, net);
+        subscribe(putResponseHandler, net);
     }
     
     Future<OpResponse> op(String key) {
