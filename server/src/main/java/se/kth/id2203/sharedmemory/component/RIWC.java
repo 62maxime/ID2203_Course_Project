@@ -27,6 +27,33 @@ public class RIWC extends ComponentDefinition {
     private int n;
     private int selfRank;
     private Triplet selfTriplet;
+    private int acks = 0;
+    private KVEntry readVal = null;
+    private KVEntry writeVal = null;
+    private int rid = 0;
+    private HashMap<NetAddress, Triplet> readList;
+    private boolean reading = false;
+    //****** Handlers ******
+    protected final Handler<AR_Read_Request> readRequestHandler = new Handler<AR_Read_Request>() {
+        @Override
+        public void handle(AR_Read_Request ar_read_request) {
+            rid = rid + 1;
+            acks = 0;
+            readList.clear();
+            reading = true;
+            trigger(new BebRequest(new Read(rid)), beb);
+        }
+    };
+    protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
+        @Override
+        public void handle(AR_Write_Request ar_write_request) {
+            rid = rid + 1;
+            writeVal = ar_write_request.getValue();
+            acks = 0;
+            readList.clear();
+            trigger(new BebRequest(new Read(rid)), beb);
+        }
+    };
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {
         @Override
         public void handle(Read read, BebDeliver bebDeliver) {
@@ -44,33 +71,6 @@ public class RIWC extends ComponentDefinition {
                 selfTriplet.setValue(write.getWriteValue());
             }
             trigger(new Message(self, bebDeliver.source, new Ack(write.getRid())), pLink);
-        }
-    };
-    private int acks = 0;
-    private KVEntry readVal = null;
-    private KVEntry writeVal = null;
-    private int rid = 0;
-    private HashMap<NetAddress, Triplet> readList;
-    protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
-        @Override
-        public void handle(AR_Write_Request ar_write_request) {
-            rid = rid + 1;
-            writeVal = ar_write_request.getValue();
-            acks = 0;
-            readList.clear();
-            trigger(new BebRequest(new Read(rid)), beb);
-        }
-    };
-    private boolean reading = false;
-    //****** Handlers ******
-    protected final Handler<AR_Read_Request> readRequestHandler = new Handler<AR_Read_Request>() {
-        @Override
-        public void handle(AR_Read_Request ar_read_request) {
-            rid = rid + 1;
-            acks = 0;
-            readList.clear();
-            reading = true;
-            trigger(new BebRequest(new Read(rid)), beb);
         }
     };
     protected final ClassMatchedHandler<Value, Message> valueMessageHandler = new ClassMatchedHandler<Value, Message>() {

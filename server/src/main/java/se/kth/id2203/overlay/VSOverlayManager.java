@@ -77,7 +77,7 @@ public class VSOverlayManager extends ComponentDefinition {
             int partitionGroupNumber = config().getValue("id2203.project.partitionGroupNumber", Integer.class);
             int replicationDelta = config().getValue("id2203.project.replicationDelta", Integer.class);
             LOG.info("Generating LookupTable...");
-            LookupTable lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
+            lut = LookupTable.generate(event.nodes, partitionGroupNumber, replicationDelta);
             LOG.debug("Generated assignments:\n{}", lut);
             initEpfd();
             trigger(new InitialAssignments(lut), boot);
