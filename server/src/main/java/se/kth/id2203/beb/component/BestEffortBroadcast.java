@@ -8,6 +8,7 @@ import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Connect;
+import se.kth.id2203.sharedmemory.event.Topology;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 
@@ -47,6 +48,14 @@ public class BestEffortBroadcast extends ComponentDefinition {
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
     };
+    protected final ClassMatchedHandler<Topology,Message> topologyMessageHandler = new ClassMatchedHandler<Topology, Message>() {
+        @Override
+        public void handle(Topology topo, Message message) {
+            LOG.debug("Received Topology " + topo.getNetAddresses().toString());
+            topology.clear();
+            topology.addAll(topo.getNetAddresses());
+        }
+    };
 
     public BestEffortBroadcast(BebInit init) {
         this.self = init.self;
@@ -54,5 +63,6 @@ public class BestEffortBroadcast extends ComponentDefinition {
 
         subscribe(requestHandler, beb);
         subscribe(deliverHandler, net);
+        subscribe(topologyMessageHandler, net);
     }
 }

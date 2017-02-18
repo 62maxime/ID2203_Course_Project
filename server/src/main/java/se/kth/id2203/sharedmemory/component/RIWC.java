@@ -1,5 +1,7 @@
 package se.kth.id2203.sharedmemory.component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.port.BebPort;
@@ -18,11 +20,14 @@ import java.util.HashMap;
  */
 public class RIWC extends ComponentDefinition {
 
+    final static Logger LOG = LoggerFactory.getLogger(RIWC.class);
+
     //******* Ports ******
     private final Negative<ReadImposeWriteConsult> nnar = provides(ReadImposeWriteConsult.class);
     private final Positive<Network> pLink = requires(Network.class);
     private final Positive<BebPort> beb = requires(BebPort.class);
     //****** Fields ******
+    private HashMap<Integer, KVEntry> store;
     private NetAddress self;
     private int n;
     private int selfRank;
@@ -41,7 +46,7 @@ public class RIWC extends ComponentDefinition {
             acks = 0;
             readList.clear();
             reading = true;
-            trigger(new BebRequest(new Read(rid)), beb);
+            trigger(new BebRequest(new Read(rid, ar_read_request.getKey())), beb);
         }
     };
     protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
@@ -51,14 +56,14 @@ public class RIWC extends ComponentDefinition {
             writeVal = ar_write_request.getValue();
             acks = 0;
             readList.clear();
-            trigger(new BebRequest(new Read(rid)), beb);
+            trigger(new BebRequest(new Read(rid, ar_write_request.getValue().getKey())), beb); // TODO might not be optimal
         }
     };
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {
         @Override
         public void handle(Read read, BebDeliver bebDeliver) {
             trigger(new Message(self, bebDeliver.source, new Value(read.getRid(), selfTriplet.getTs(),
-                    selfTriplet.getWr(), selfTriplet.getValue())), pLink);
+                    selfTriplet.getWr(), store.get(read.getKey()))), pLink);
         }
     };
     protected final ClassMatchedHandler<Write, BebDeliver> writeBebDeliverHandler = new ClassMatchedHandler<Write, BebDeliver>() {
@@ -68,9 +73,9 @@ public class RIWC extends ComponentDefinition {
             if (selfTriplet.isLowerOrEqualThan(triplet)) {
                 selfTriplet.setTs(write.getTs());
                 selfTriplet.setWr(write.getWr());
-                selfTriplet.setValue(write.getWriteValue());
+                store.put(write.getWriteValue().getKey(), write.getWriteValue());
             }
-            trigger(new Message(self, bebDeliver.source, new Ack(write.getRid())), pLink);
+            trigger(new Message(self, bebDeliver.source, new Ack(write.getRid(), write.getWriteValue().getKey())), pLink);
         }
     };
     protected final ClassMatchedHandler<Value, Message> valueMessageHandler = new ClassMatchedHandler<Value, Message>() {
@@ -114,12 +119,19 @@ public class RIWC extends ComponentDefinition {
                     acks = 0;
                     if (reading) {
                         reading = false;
-                        trigger(new AR_Read_Response(readVal), nnar);
+                        trigger(new AR_Read_Response(store.get(ack.getKey())), nnar);
                     } else {
-                        trigger(new AR_Write_Response(), nnar);
+                        trigger(new AR_Write_Response(ack.getKey()), nnar);
                     }
                 }
             }
+        }
+    };
+    protected final ClassMatchedHandler<Topology, Message> topologyMessageHandler = new ClassMatchedHandler<Topology, Message>() {
+        @Override
+        public void handle(Topology topology, Message message) {
+            LOG.debug("Received Topology " + topology.getNetAddresses().toString());
+            n = topology.getNetAddresses().size();
         }
     };
 
@@ -130,6 +142,7 @@ public class RIWC extends ComponentDefinition {
         subscribe(readBebDeliverHandler, beb);
         subscribe(valueMessageHandler, pLink);
         subscribe(ackMessageHandler, pLink);
+        subscribe(topologyMessageHandler, pLink);
     }
 
     public RIWC(RIWCInit init) {
@@ -138,6 +151,7 @@ public class RIWC extends ComponentDefinition {
         this.selfRank = init.getSelfRank();
         readList = new HashMap<>();
         this.selfTriplet = new Triplet(0, 0, null);
+        this.store = init.getStore();
     }
 
     private class Triplet {
