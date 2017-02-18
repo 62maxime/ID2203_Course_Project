@@ -17,13 +17,25 @@ public class KVEntry implements Serializable {
         this.value = value;
     }
 
-    public Integer getKey() {
-        return key;
+
+    public KVEntry(KVEntry kvEntry) {
+        this.key = kvEntry.getKey();
+        this.value = kvEntry.getValue();
     }
 
     public Integer getValue() {
         return value;
     }
+
+
+    public Integer getKey() {
+        return key;
+    }
+
+    public void setValue(Integer value) {
+        this.value = value;
+    }
+
 
     @Override
     public String toString() {
@@ -32,4 +44,5 @@ public class KVEntry implements Serializable {
                 ", value=" + value +
                 '}';
     }
+
 }

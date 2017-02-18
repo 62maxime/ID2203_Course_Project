@@ -90,7 +90,7 @@ public class KVService extends ComponentDefinition {
         @Override
         public void handle(PutRequest content, Message context) {
             LOG.info("Got operation {}!", content);
-            trigger(new AR_Write_Request(content.id, content.getValue()), riwc);
+            trigger(new AR_Write_Request(content.id, content.key.hashCode(), content.getValue()), riwc);
             pending.put(content.id, context.getSource());
 
         }

@@ -13,15 +13,21 @@ public class AR_Write_Request implements KompicsEvent, Serializable {
 
     private static final long serialVersionUID = 3210761070543736747L;
     private UUID uuid;
+    private int key;
     private KVEntry value;
 
-    public AR_Write_Request(UUID uuid, KVEntry value) {
+    public AR_Write_Request(UUID uuid, int key, KVEntry value) {
         this.uuid = uuid;
+        this.key = key;
         this.value = value;
     }
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public int getKey() {
+        return key;
     }
 
     public KVEntry getValue() {

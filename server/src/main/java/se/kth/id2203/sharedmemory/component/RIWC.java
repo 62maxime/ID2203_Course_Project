@@ -27,13 +27,11 @@ public class RIWC extends ComponentDefinition {
     private final Positive<Network> pLink = requires(Network.class);
     private final Positive<BebPort> beb = requires(BebPort.class);
     //****** Fields ******
-    private HashMap<Integer, KVEntry> store;
+    private HashMap<Integer, Triplet> store;
     private NetAddress self;
     private int n;
     private int selfRank;
-    private Triplet selfTriplet;
     private int acks = 0;
-    private KVEntry readVal = null;
     private KVEntry writeVal = null;
     private int rid = 0;
     private HashMap<NetAddress, Triplet> readList;
@@ -56,28 +54,43 @@ public class RIWC extends ComponentDefinition {
             writeVal = ar_write_request.getValue();
             acks = 0;
             readList.clear();
-            trigger(new BebRequest(new Read(ar_write_request.getUuid(), rid, ar_write_request.getValue().getKey())), beb); // TODO might not be optimal
+            trigger(new BebRequest(
+                    new Read(ar_write_request.getUuid(), rid, ar_write_request.getKey())), beb);
+            // TODO might not be optimal
         }
     };
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {
         @Override
         public void handle(Read read, BebDeliver bebDeliver) {
-            trigger(new Message(self, bebDeliver.source, new Value(read.getUuid(), read.getRid(), selfTriplet.getTs(),
-                    selfTriplet.getWr(), read.getKey(), store.get(read.getKey()))), pLink);
+            Triplet triplet = store.get(read.getKey());
+            if (triplet != null) {
+                trigger(new Message(self, bebDeliver.source, new Value(read.getUuid(), read.getRid(), triplet.getTs(),
+                        triplet.getWr(), read.getKey(), triplet.getValue())), pLink);
+
+            } else {
+                trigger(new Message(self, bebDeliver.source, new Value(read.getUuid(), read.getRid(), 0, selfRank,
+                        read.getKey(), null)), pLink);
+            }
         }
     };
     protected final ClassMatchedHandler<Write, BebDeliver> writeBebDeliverHandler = new ClassMatchedHandler<Write, BebDeliver>() {
         @Override
         public void handle(Write write, BebDeliver bebDeliver) {
-            Triplet triplet = new Triplet(write.getTs(), write.getWr(), write.getWriteValue());
-            if (selfTriplet.isLowerOrEqualThan(triplet)) {
-                selfTriplet.setTs(write.getTs());
-                selfTriplet.setWr(write.getWr());
-                if (write.getWriteValue() != null) {
-                    store.put(write.getKey(), write.getWriteValue());
+            if (write.getWriteValue() != null) {
+                Triplet triplet = new Triplet(write.getTs(), write.getWr(), write.getWriteValue());
+                Triplet selfTriplet = store.get(write.getKey());
+                if (selfTriplet == null) {
+                    selfTriplet = new Triplet(0, selfRank, null);
+                }
+                if (selfTriplet.isLowerOrEqualThan(triplet)) {
+                    selfTriplet.setTs(triplet.getTs());
+                    selfTriplet.setWr(triplet.getWr());
+                    selfTriplet.setValue(triplet.getValue());
+                    store.put(write.getKey(), selfTriplet);
                 }
             }
-            trigger(new Message(self, bebDeliver.source, new Ack(write.getUuid(), write.getRid(), write.getKey())), pLink);
+            trigger(new Message(self, bebDeliver.source,
+                    new Ack(write.getUuid(), write.getRid(), write.getKey())), pLink);
         }
     };
     protected final ClassMatchedHandler<Value, Message> valueMessageHandler = new ClassMatchedHandler<Value, Message>() {
@@ -95,7 +108,6 @@ public class RIWC extends ComponentDefinition {
                             triplet = new Triplet(pts);
                         }
                     }
-                    readVal = triplet.getValue();
                     readList.clear();
                     KVEntry bCastVal;
                     if (reading) {
@@ -106,7 +118,8 @@ public class RIWC extends ComponentDefinition {
                         bCastVal = writeVal;
                     }
 
-                    trigger(new BebRequest(new Write(value.getUuid(), rid, triplet.getTs(), triplet.getWr(), value.getKey(), bCastVal)), beb);
+                    trigger(new BebRequest(new Write(value.getUuid(), rid,
+                            triplet.getTs(), triplet.getWr(), value.getKey(), bCastVal)), beb);
                 }
 
             }
@@ -121,7 +134,12 @@ public class RIWC extends ComponentDefinition {
                     acks = 0;
                     if (reading) {
                         reading = false;
-                        trigger(new AR_Read_Response(ack.getUuid(), store.get(ack.getKey())), nnar);
+                        Triplet triplet = store.get(ack.getKey());
+                        if (triplet == null) {
+                            trigger(new AR_Read_Response(ack.getUuid(), null), nnar);
+                        } else {
+                            trigger(new AR_Read_Response(ack.getUuid(), triplet.getValue()), nnar);
+                        }
                     } else {
                         trigger(new AR_Write_Response(ack.getUuid(), ack.getKey()), nnar);
                     }
@@ -152,8 +170,11 @@ public class RIWC extends ComponentDefinition {
         this.n = init.getN();
         this.selfRank = init.getSelfRank();
         readList = new HashMap<>();
-        this.selfTriplet = new Triplet(0, 0, null);
-        this.store = init.getStore();
+        store = new HashMap<>();
+        for (Integer key :
+                init.getStore().keySet()) {
+            store.put(key, new Triplet(0, selfRank, init.getStore().get(key)));
+        }
     }
 
     private class Triplet {
