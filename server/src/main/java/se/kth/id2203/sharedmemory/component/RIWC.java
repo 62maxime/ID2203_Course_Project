@@ -40,6 +40,7 @@ public class RIWC extends ComponentDefinition {
     protected final Handler<AR_Read_Request> readRequestHandler = new Handler<AR_Read_Request>() {
         @Override
         public void handle(AR_Read_Request ar_read_request) {
+            LOG.info("Receive an AR_Read_Request for {}",ar_read_request.getKey());
             rid = rid + 1;
             acks = 0;
             readList.clear();
@@ -50,6 +51,7 @@ public class RIWC extends ComponentDefinition {
     protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
         @Override
         public void handle(AR_Write_Request ar_write_request) {
+            LOG.info("Receive an AR_Write_Request for {} with {}",ar_write_request.getKey(), ar_write_request.getValue());
             rid = rid + 1;
             writeVal = ar_write_request.getValue();
             acks = 0;
@@ -62,6 +64,7 @@ public class RIWC extends ComponentDefinition {
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {
         @Override
         public void handle(Read read, BebDeliver bebDeliver) {
+            LOG.info("Receive an READ from {} for {}", bebDeliver.source, read.getKey());
             Triplet triplet = store.get(read.getKey());
             if (triplet != null) {
                 trigger(new Message(self, bebDeliver.source, new Value(read.getUuid(), read.getRid(), triplet.getTs(),
@@ -76,6 +79,7 @@ public class RIWC extends ComponentDefinition {
     protected final ClassMatchedHandler<Write, BebDeliver> writeBebDeliverHandler = new ClassMatchedHandler<Write, BebDeliver>() {
         @Override
         public void handle(Write write, BebDeliver bebDeliver) {
+            LOG.info("Receive an WRITE from {} for {}", bebDeliver.source, write.getKey());
             if (write.getWriteValue() != null) {
                 Triplet triplet = new Triplet(write.getTs(), write.getWr(), write.getWriteValue());
                 Triplet selfTriplet = store.get(write.getKey());
@@ -96,6 +100,7 @@ public class RIWC extends ComponentDefinition {
     protected final ClassMatchedHandler<Value, Message> valueMessageHandler = new ClassMatchedHandler<Value, Message>() {
         @Override
         public void handle(Value value, Message message) {
+            LOG.info("Receive an Value from {} for {} with {}", message.getSource(), value.getKey(), value.getValue());
             if (value.getRid() == rid) {
                 readList.put(message.getSource(), new Triplet(value.getTs(), value.getWr(), value.getValue()));
                 if (readList.keySet().size() > (n / 2)) {
@@ -128,9 +133,10 @@ public class RIWC extends ComponentDefinition {
     protected final ClassMatchedHandler<Ack, Message> ackMessageHandler = new ClassMatchedHandler<Ack, Message>() {
         @Override
         public void handle(Ack ack, Message message) {
+            LOG.info("Receive an ACK from {} for {}", message.getSource(), ack.getKey());
             if (ack.getRid() == rid) {
                 acks += 1;
-                if (acks > n / 2) {
+                if (acks > (n / 2)) {
                     acks = 0;
                     if (reading) {
                         reading = false;
