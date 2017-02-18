@@ -40,7 +40,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.UUID;
 
 /**
@@ -55,11 +55,12 @@ public class KVService extends ComponentDefinition {
     protected final Positive<ReadImposeWriteConsult> riwc = requires(ReadImposeWriteConsult.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
-    private HashMap<UUID, NetAddress> pending;
+    private LinkedList<Message> pending;
+    private boolean busy = false;
 
     //******* Constructor ******
     public KVService(KVServiceInit init) {
-        this.pending = new HashMap<>();
+        this.pending = new LinkedList<>();
     }
 
     //******* Handlers ******
@@ -78,10 +79,15 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(GetRequest content, Message context) {
-            LOG.info("Got operation {}!", content);
-            //trigger(new Message(self, context.getSource(), new GetResponse(content.id, Code.OK, value)), net);
-            trigger(new AR_Read_Request(content.id, content.key.hashCode()), riwc);
-            pending.put(content.id, context.getSource());
+            if (!busy) {
+                busy = true;
+                LOG.info("Got operation {}!", content);
+                trigger(new AR_Read_Request(content.id, content.key.hashCode()), riwc);
+                pending.addFirst(context);
+            } else {
+                LOG.info("Got operation -> Pending {}", content.id);
+                pending.addLast(context);
+            }
         }
 
     };
@@ -89,9 +95,15 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(PutRequest content, Message context) {
-            LOG.info("Got operation {}!", content);
-            trigger(new AR_Write_Request(content.id, content.key.hashCode(), content.getValue()), riwc);
-            pending.put(content.id, context.getSource());
+            if (!busy) {
+                busy = true;
+                LOG.info("Got operation {}!", content);
+                trigger(new AR_Write_Request(content.id, content.key.hashCode(), content.getValue()), riwc);
+                pending.addFirst(context);
+            } else {
+                LOG.info("Got operation -> Pending");
+                pending.addLast(context);
+            }
 
         }
 
@@ -101,14 +113,14 @@ public class KVService extends ComponentDefinition {
         public void handle(AR_Read_Response ar_read_response) {
             LOG.debug("AR_Read_Response " + ar_read_response.getValue());
             UUID uuid = ar_read_response.getUuid();
-            NetAddress address = pending.remove(uuid);
+            NetAddress address = pending.removeFirst().getSource();
             KVEntry value = ar_read_response.getValue();
             if (value == null) {
                 trigger(new Message(self, address, new GetResponse(uuid, Code.NOT_FOUND, value)), net);
             } else {
                 trigger(new Message(self, address, new GetResponse(uuid, Code.OK, value)), net);
             }
-
+            nextTask();
         }
     };
     protected final Handler<AR_Write_Response> ar_write_responseHandler = new Handler<AR_Write_Response>() {
@@ -116,11 +128,32 @@ public class KVService extends ComponentDefinition {
         public void handle(AR_Write_Response ar_write_response) {
             LOG.debug("AR_Write_Response ");
             UUID uuid = ar_write_response.getUuid();
-            NetAddress address = pending.remove(uuid);
+            NetAddress address = pending.removeFirst().getSource();
             trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
+            nextTask();
 
         }
     };
+
+    private final void nextTask() {
+        busy = false;
+        if (pending.isEmpty()){
+            return;
+        }
+        Message message = pending.removeFirst();
+        Object o = message.extractPattern().cast(message.extractValue());
+        if (o instanceof GetRequest) {
+            LOG.info("Pending -> GetRequest");
+            getHandler.handle((GetRequest) o, message);
+        } else if (o instanceof PutRequest) {
+            LOG.info("Pending -> PutRequest");
+            putHandler.handle((PutRequest) o, message);
+        } else {
+            LOG.info("Pending -> Bad");
+        }
+
+    }
+
 
     {
         subscribe(opHandler, net);
