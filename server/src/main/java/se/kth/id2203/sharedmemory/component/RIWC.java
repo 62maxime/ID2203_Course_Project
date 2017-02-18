@@ -46,7 +46,7 @@ public class RIWC extends ComponentDefinition {
             acks = 0;
             readList.clear();
             reading = true;
-            trigger(new BebRequest(new Read(rid, ar_read_request.getKey())), beb);
+            trigger(new BebRequest(new Read(ar_read_request.getUuid(), rid, ar_read_request.getKey())), beb);
         }
     };
     protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
@@ -56,14 +56,14 @@ public class RIWC extends ComponentDefinition {
             writeVal = ar_write_request.getValue();
             acks = 0;
             readList.clear();
-            trigger(new BebRequest(new Read(rid, ar_write_request.getValue().getKey())), beb); // TODO might not be optimal
+            trigger(new BebRequest(new Read(ar_write_request.getUuid(), rid, ar_write_request.getValue().getKey())), beb); // TODO might not be optimal
         }
     };
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {
         @Override
         public void handle(Read read, BebDeliver bebDeliver) {
-            trigger(new Message(self, bebDeliver.source, new Value(read.getRid(), selfTriplet.getTs(),
-                    selfTriplet.getWr(), store.get(read.getKey()))), pLink);
+            trigger(new Message(self, bebDeliver.source, new Value(read.getUuid(), read.getRid(), selfTriplet.getTs(),
+                    selfTriplet.getWr(), read.getKey(), store.get(read.getKey()))), pLink);
         }
     };
     protected final ClassMatchedHandler<Write, BebDeliver> writeBebDeliverHandler = new ClassMatchedHandler<Write, BebDeliver>() {
@@ -73,9 +73,11 @@ public class RIWC extends ComponentDefinition {
             if (selfTriplet.isLowerOrEqualThan(triplet)) {
                 selfTriplet.setTs(write.getTs());
                 selfTriplet.setWr(write.getWr());
-                store.put(write.getWriteValue().getKey(), write.getWriteValue());
+                if (write.getWriteValue() != null) {
+                    store.put(write.getKey(), write.getWriteValue());
+                }
             }
-            trigger(new Message(self, bebDeliver.source, new Ack(write.getRid(), write.getWriteValue().getKey())), pLink);
+            trigger(new Message(self, bebDeliver.source, new Ack(write.getUuid(), write.getRid(), write.getKey())), pLink);
         }
     };
     protected final ClassMatchedHandler<Value, Message> valueMessageHandler = new ClassMatchedHandler<Value, Message>() {
@@ -104,7 +106,7 @@ public class RIWC extends ComponentDefinition {
                         bCastVal = writeVal;
                     }
 
-                    trigger(new BebRequest(new Write(rid, triplet.getTs(), triplet.getWr(), bCastVal)), beb);
+                    trigger(new BebRequest(new Write(value.getUuid(), rid, triplet.getTs(), triplet.getWr(), value.getKey(), bCastVal)), beb);
                 }
 
             }
@@ -119,9 +121,9 @@ public class RIWC extends ComponentDefinition {
                     acks = 0;
                     if (reading) {
                         reading = false;
-                        trigger(new AR_Read_Response(store.get(ack.getKey())), nnar);
+                        trigger(new AR_Read_Response(ack.getUuid(), store.get(ack.getKey())), nnar);
                     } else {
-                        trigger(new AR_Write_Response(ack.getKey()), nnar);
+                        trigger(new AR_Write_Response(ack.getUuid(), ack.getKey()), nnar);
                     }
                 }
             }

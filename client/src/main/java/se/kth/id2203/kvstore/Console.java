@@ -250,7 +250,7 @@ public class Console implements Runnable {
                 if (line.isEmpty()) {
                     continue;
                 }
-                String[] cmdline = line.split(" ", 2);
+                String[] cmdline = line.split(" ", 3);
                 String cmd = cmdline[0];
                 Command c = commands.get(cmd);
                 if (c == null) {

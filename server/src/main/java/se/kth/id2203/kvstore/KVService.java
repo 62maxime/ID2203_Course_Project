@@ -80,7 +80,7 @@ public class KVService extends ComponentDefinition {
         public void handle(GetRequest content, Message context) {
             LOG.info("Got operation {}!", content);
             //trigger(new Message(self, context.getSource(), new GetResponse(content.id, Code.OK, value)), net);
-            trigger(new AR_Read_Request(content.key.hashCode()), riwc);
+            trigger(new AR_Read_Request(content.id, content.key.hashCode()), riwc);
             pending.put(content.id, context.getSource());
         }
 
@@ -90,7 +90,7 @@ public class KVService extends ComponentDefinition {
         @Override
         public void handle(PutRequest content, Message context) {
             LOG.info("Got operation {}!", content);
-            trigger(new AR_Write_Request(content.getValue()), riwc);
+            trigger(new AR_Write_Request(content.id, content.getValue()), riwc);
             pending.put(content.id, context.getSource());
 
         }
@@ -100,15 +100,14 @@ public class KVService extends ComponentDefinition {
         @Override
         public void handle(AR_Read_Response ar_read_response) {
             LOG.debug("AR_Read_Response " + ar_read_response.getValue());
-            UUID uid = pending.keySet().iterator().next();
-            NetAddress address = pending.get(uid);
+            UUID uuid = ar_read_response.getUuid();
+            NetAddress address = pending.remove(uuid);
             KVEntry value = ar_read_response.getValue();
             if (value == null) {
-                trigger(new Message(self, address, new GetResponse(uid, Code.NOT_FOUND, value)), net);
+                trigger(new Message(self, address, new GetResponse(uuid, Code.NOT_FOUND, value)), net);
             } else {
-                trigger(new Message(self, address, new GetResponse(uid, Code.OK, value)), net);
+                trigger(new Message(self, address, new GetResponse(uuid, Code.OK, value)), net);
             }
-            pending.remove(uid);
 
         }
     };
@@ -116,10 +115,10 @@ public class KVService extends ComponentDefinition {
         @Override
         public void handle(AR_Write_Response ar_write_response) {
             LOG.debug("AR_Write_Response ");
-            UUID uid = pending.keySet().iterator().next();
-            NetAddress address = pending.get(uid);
-            trigger(new Message(self, address, new PutResponse(uid, Code.OK)), net);
-            pending.remove(uid);
+            UUID uuid = ar_write_response.getUuid();
+            NetAddress address = pending.remove(uuid);
+            trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
+
         }
     };
 
