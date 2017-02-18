@@ -7,6 +7,8 @@ import java.io.Serializable;
  */
 public class KVEntry implements Serializable {
 
+
+    private static final long serialVersionUID = 6326281416016333606L;
     private Integer key;
     private Integer value;
 

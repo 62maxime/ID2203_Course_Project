@@ -10,6 +10,7 @@ import java.io.Serializable;
  */
 public class AR_Read_Response implements KompicsEvent, Serializable {
 
+    private static final long serialVersionUID = 7272451227450461928L;
     private KVEntry value;
 
     public AR_Read_Response(KVEntry value) {

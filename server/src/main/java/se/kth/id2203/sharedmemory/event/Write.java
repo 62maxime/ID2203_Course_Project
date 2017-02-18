@@ -10,6 +10,7 @@ import java.io.Serializable;
  */
 public class Write implements KompicsEvent, Serializable {
 
+    private static final long serialVersionUID = 7144606390977303585L;
     private int rid;
     private int ts;
     private int wr;

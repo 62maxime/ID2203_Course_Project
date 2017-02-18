@@ -5,11 +5,14 @@ import se.kth.id2203.sharedmemory.event.Read;
 import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.PatternExtractor;
 
+import java.io.Serializable;
+
 /**
  * Created by YannL on 13/02/2017.
  */
-public class BebDeliver implements KompicsEvent, PatternExtractor<Class, KompicsEvent> {
+public class BebDeliver implements KompicsEvent, PatternExtractor<Class, KompicsEvent>, Serializable {
 
+    private static final long serialVersionUID = 3741009865342768900L;
     public final NetAddress source;
     public final KompicsEvent payload;
 

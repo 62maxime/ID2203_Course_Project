@@ -10,6 +10,7 @@ import java.io.Serializable;
  */
 public class Value implements KompicsEvent, Serializable {
 
+    private static final long serialVersionUID = -4098152603293776232L;
     private int rid;
     private int ts;
     private int wr;

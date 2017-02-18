@@ -9,13 +9,20 @@ import java.io.Serializable;
  */
 public class Read implements KompicsEvent, Serializable {
 
+    private static final long serialVersionUID = 7229746719790140726L;
     private int rid;
+    private int key;
 
-    public Read(int rid) {
+    public Read(int rid, int key) {
         this.rid = rid;
+        this.key = key;
     }
 
     public int getRid() {
         return rid;
+    }
+
+    public int getKey() {
+        return key;
     }
 }
