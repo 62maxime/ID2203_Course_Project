@@ -29,9 +29,9 @@ import se.kth.id2203.kvstore.OpResponse.Code;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
-import se.kth.id2203.sharedmemory.component.RIWC;
 import se.kth.id2203.sharedmemory.event.AR_Read_Request;
 import se.kth.id2203.sharedmemory.event.AR_Read_Response;
+import se.kth.id2203.sharedmemory.event.AR_Write_Request;
 import se.kth.id2203.sharedmemory.event.AR_Write_Response;
 import se.kth.id2203.sharedmemory.port.ReadImposeWriteConsult;
 import se.sics.kompics.ClassMatchedHandler;
@@ -44,7 +44,6 @@ import java.util.HashMap;
 import java.util.UUID;
 
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class KVService extends ComponentDefinition {
@@ -58,18 +57,20 @@ public class KVService extends ComponentDefinition {
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private HashMap<Integer, KVEntry> store;
     private HashMap<UUID, NetAddress> pending;
+
     //******* Constructor ******
     public KVService(KVServiceInit init) {
         this.store = init.getStore();
         this.pending = new HashMap<>();
     }
+
     //******* Handlers ******
     protected final ClassMatchedHandler<Operation, Message> opHandler = new ClassMatchedHandler<Operation, Message>() {
 
         @Override
         public void handle(Operation content, Message context) {
             LOG.info("Got operation {}! Now implement me please :)", content);
-            trigger(new Message(self, context.getSource(),  (new OpResponse(content.id, Code.NOT_IMPLEMENTED))), net);
+            trigger(new Message(self, context.getSource(), (new OpResponse(content.id, Code.NOT_IMPLEMENTED))), net);
 
         }
 
@@ -80,17 +81,19 @@ public class KVService extends ComponentDefinition {
         @Override
         public void handle(GetRequest content, Message context) {
             LOG.info("Got operation {}!", content);
-            KVEntry value = store.get(content.key.hashCode());
-            if (value == null) {
-                LOG.info("{} NOT_FOUND!", content);
-                GetResponse getResponse = new GetResponse(content.id, Code.NOT_FOUND, value);
-                trigger(new Message(self, context.getSource(), getResponse), net);
-            } else  {
-                LOG.info("{} OK!", content);
-                //trigger(new Message(self, context.getSource(), new GetResponse(content.id, Code.OK, value)), net);
-                trigger(new AR_Read_Request(content.key.hashCode()), riwc);
-                pending.put(content.id, context.getSource());
-            }
+            //trigger(new Message(self, context.getSource(), new GetResponse(content.id, Code.OK, value)), net);
+            trigger(new AR_Read_Request(content.key.hashCode()), riwc);
+            pending.put(content.id, context.getSource());
+        }
+
+    };
+    protected final ClassMatchedHandler<PutRequest, Message> putHandler = new ClassMatchedHandler<PutRequest, Message>() {
+
+        @Override
+        public void handle(PutRequest content, Message context) {
+            LOG.info("Got operation {}!", content);
+            trigger(new AR_Write_Request(content.getValue()), riwc);
+            pending.put(content.id, context.getSource());
 
         }
 
@@ -101,21 +104,31 @@ public class KVService extends ComponentDefinition {
             LOG.debug("AR_Read_Response " + ar_read_response.getValue());
             UUID uid = pending.keySet().iterator().next();
             NetAddress address = pending.get(uid);
-            trigger(new Message(self, address , new GetResponse(uid, Code.OK, ar_read_response.getValue())), net);
+            KVEntry value = ar_read_response.getValue();
+            if (value == null) {
+                trigger(new Message(self, address, new GetResponse(uid, Code.NOT_FOUND, value)), net);
+            } else {
+                trigger(new Message(self, address, new GetResponse(uid, Code.OK, value)), net);
+            }
             pending.remove(uid);
 
         }
     };
-    protected  final  Handler<AR_Write_Response> ar_write_responseHandler = new Handler<AR_Write_Response>() {
+    protected final Handler<AR_Write_Response> ar_write_responseHandler = new Handler<AR_Write_Response>() {
         @Override
         public void handle(AR_Write_Response ar_write_response) {
-
+            LOG.debug("AR_Write_Response ");
+            UUID uid = pending.keySet().iterator().next();
+            NetAddress address = pending.get(uid);
+            trigger(new Message(self, address, new PutResponse(uid, Code.OK)), net);
+            pending.remove(uid);
         }
     };
 
     {
         subscribe(opHandler, net);
         subscribe(getHandler, net);
+        subscribe(putHandler, net);
         subscribe(ar_read_responseHandler, riwc);
         subscribe(ar_write_responseHandler, riwc);
     }
