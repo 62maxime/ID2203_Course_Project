@@ -26,6 +26,10 @@ package se.kth.id2203.overlay;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeMultimap;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
+
 import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,4 +106,7 @@ public class LookupTable implements NodeAssignment {
     }
 
 
+    public TreeMultimap<Integer, NetAddress> getPartitions() {
+        return partitions;
+    }
 }

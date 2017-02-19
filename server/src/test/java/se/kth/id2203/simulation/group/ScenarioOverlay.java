@@ -57,7 +57,9 @@ public class ScenarioOverlay extends ComponentDefinition {
                 lut = (LookupTable) event.assignment;
                 replicationGroup = lut.getKey(self);
                 SimulationResult.setResultTable(self, lut);
-                LOG.info("[Node] Address: " + self + "; ReplicationGroup: " + replicationGroup.getNodes().toString());
+                LOG.info("[Node] Address: " + self +
+                        "; ReplicationGroup: " + replicationGroup.getNodes().toString() +
+                        "; Table: " + lut.getPartitions().toString());
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());
             }
