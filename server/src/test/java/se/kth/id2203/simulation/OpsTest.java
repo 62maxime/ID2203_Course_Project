@@ -25,9 +25,11 @@ package se.kth.id2203.simulation;
 
 import junit.framework.Assert;
 import org.junit.Test;
+import se.kth.id2203.kvstore.KVEntry;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.run.LauncherComp;
 
+import java.util.HashMap;
 /**
  *
  * @author Lars Kroll <lkroll@kth.se>
@@ -40,17 +42,27 @@ public class OpsTest {
 
     @Test
     public void simpleOpsTest() {
+        HashMap<Integer, KVEntry> store = new HashMap<>();
+        store.put("test0".hashCode(), new KVEntry("test0".hashCode(), 41));
+        store.put("test1".hashCode(), new KVEntry("test1".hashCode(), 40));
+        store.put("test2".hashCode(), new KVEntry("test2".hashCode(), 39));
+
         long seed = 123;
         SimulationScenario.setSeed(seed);
         SimulationScenario simpleBootScenario = ScenarioGen.simpleOps(6);
-        res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND);
+        res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND );
         simpleBootScenario.simulate(LauncherComp.class);
         for (int i = 0; i < NUM_MESSAGES_OK; i++) {
-            Assert.assertEquals("OK", res.get("test"+i, String.class));
+            String k = "test" + i;
+            Integer kvEntry =  res.get(k, Integer.class);
+            Assert.assertEquals(store.get(k.hashCode()).getValue(), kvEntry);
         }
-        for (int i = NUM_MESSAGES_OK; i < NUM_MESSAGES_NOT_FOUND + NUM_MESSAGES_OK; i++) {
-            Assert.assertEquals("NOT_FOUND", res.get("test"+i, String.class));
+        for (int j = NUM_MESSAGES_OK; j < NUM_MESSAGES_NOT_FOUND+ NUM_MESSAGES_OK; j++){
+            String k = "test" + j;
+            Assert.assertEquals("NOT_FOUND", res.get(k, String.class));
         }
     }
+
+
 
 }

@@ -28,10 +28,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.kvstore.GetRequest;
-import se.kth.id2203.kvstore.GetResponse;
-import se.kth.id2203.kvstore.OpResponse;
-import se.kth.id2203.kvstore.Operation;
+import se.kth.id2203.kvstore.*;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.RouteMsg;
@@ -95,6 +92,24 @@ public class ScenarioClient extends ComponentDefinition {
             LOG.debug("Got GetResponse: {}", content);
             String key = pending.remove(content.id);
             if (key != null) {
+                if (content.getValue() == null){
+                    res.put(key, "NOT_FOUND");
+                } else {
+                    res.put(key, content.getValue().getValue());
+                }
+
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+        }
+    };
+    protected final ClassMatchedHandler<PutResponse, Message> putResponseHandler = new ClassMatchedHandler<PutResponse, Message>() {
+
+        @Override
+        public void handle(PutResponse content, Message context) {
+            LOG.debug("Got PutResponse: {}", content);
+            String key = pending.remove(content.id);
+            if (key != null) {
                 res.put(key, content.status.toString());
             } else {
                 LOG.warn("ID {} was not pending! Ignoring response.", content.id);
@@ -106,5 +121,6 @@ public class ScenarioClient extends ComponentDefinition {
         subscribe(startHandler, control);
         subscribe(responseHandler, net);
         subscribe(getResponseHandler, net);
+        subscribe(putResponseHandler, net);
     }
 }
