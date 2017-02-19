@@ -2,8 +2,6 @@ package se.kth.id2203.overlay;
 
 import se.kth.id2203.networking.NetAddress;
 
-import java.util.List;
-import java.util.Map;
 import java.util.NavigableSet;
 
 /**
@@ -24,17 +22,17 @@ public class ReplicationGroup {
         if (lowerBound == upperBound) {
             return true;
         } else if (lowerBound < upperBound) {
-            return ((lowerBound < key) &&  (key <= upperBound));
+            return ((lowerBound < key) && (key <= upperBound));
         } else {
-            return ((lowerBound < key) || (key <= upperBound ));
+            return ((lowerBound < key) || (key <= upperBound));
         }
     }
 
-    public void removeNode (NetAddress address) {
+    public void removeNode(NetAddress address) {
         nodes.remove(address);
     }
 
-    public void addNode (NetAddress address) {
+    public void addNode(NetAddress address) {
         nodes.add(address);
     }
 

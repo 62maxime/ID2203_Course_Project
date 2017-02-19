@@ -25,34 +25,27 @@ package se.kth.id2203.kvstore;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.SettableFuture;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.concurrent.Future;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Connect;
 import se.kth.id2203.overlay.RouteMsg;
-import se.sics.kompics.ClassMatchedHandler;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Kompics;
-import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Start;
+import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 import se.sics.kompics.timer.Timer;
 
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.Future;
+
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class ClientService extends ComponentDefinition {
-    
+
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ClientService.class);
     //******* Ports ******
     final Positive<Timer> timer = requires(Timer.class);
@@ -65,7 +58,7 @@ public class ClientService extends ComponentDefinition {
 
     //******* Handlers ******
     protected final Handler<Start> startHandler = new Handler<Start>() {
-        
+
         @Override
         public void handle(Start event) {
             LOG.debug("Starting client on {}. Waiting to connect...", self);
@@ -77,7 +70,7 @@ public class ClientService extends ComponentDefinition {
         }
     };
     protected final ClassMatchedHandler<Connect.Ack, Message> connectHandler = new ClassMatchedHandler<Connect.Ack, Message>() {
-        
+
         @Override
         public void handle(Connect.Ack content, Message context) {
             LOG.info("Client connected to {}, cluster size is {}", server, content.clusterSize);
@@ -88,7 +81,7 @@ public class ClientService extends ComponentDefinition {
         }
     };
     protected final Handler<ConnectTimeout> timeoutHandler = new Handler<ConnectTimeout>() {
-        
+
         @Override
         public void handle(ConnectTimeout event) {
             if (!connected.isPresent()) {
@@ -104,7 +97,7 @@ public class ClientService extends ComponentDefinition {
         }
     };
     protected final Handler<OpWithFuture> opHandler = new Handler<OpWithFuture>() {
-        
+
         @Override
         public void handle(OpWithFuture event) {
             RouteMsg rm = new RouteMsg(event.op.key, event.op); // don't know which partition is responsible, so ask the bootstrap server to forward it
@@ -115,7 +108,7 @@ public class ClientService extends ComponentDefinition {
 
 
     protected final ClassMatchedHandler<OpResponse, Message> responseHandler = new ClassMatchedHandler<OpResponse, Message>() {
-        
+
         @Override
         public void handle(OpResponse content, Message context) {
             LOG.debug("Got OpResponse: {}", content);
@@ -154,7 +147,7 @@ public class ClientService extends ComponentDefinition {
             }
         }
     };
-    
+
     {
         subscribe(startHandler, control);
         subscribe(timeoutHandler, timer);
@@ -164,39 +157,41 @@ public class ClientService extends ComponentDefinition {
         subscribe(getResponseHandler, net);
         subscribe(putResponseHandler, net);
     }
-    
+
     Future<OpResponse> op(String key) {
         Operation op = new Operation(key);
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
+
     Future<OpResponse> get(String key) {
         GetRequest op = new GetRequest(key);
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
+
     Future<OpResponse> put(String key, String value) {
         PutRequest op = new PutRequest(key, new KVEntry(key.hashCode(), Integer.parseInt(value)));
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
-    
+
     public static class OpWithFuture implements KompicsEvent {
-        
+
         public final Operation op;
         public final SettableFuture<OpResponse> f;
-        
+
         public OpWithFuture(Operation op) {
             this.op = op;
             this.f = SettableFuture.create();
         }
     }
-    
+
     public static class ConnectTimeout extends Timeout {
-        
+
         ConnectTimeout(ScheduleTimeout st) {
             super(st);
         }

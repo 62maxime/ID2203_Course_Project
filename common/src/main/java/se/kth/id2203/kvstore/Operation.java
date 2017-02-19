@@ -24,12 +24,12 @@
 package se.kth.id2203.kvstore;
 
 import com.google.common.base.MoreObjects;
-import java.io.Serializable;
-import java.util.UUID;
 import se.sics.kompics.KompicsEvent;
 
+import java.io.Serializable;
+import java.util.UUID;
+
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class Operation implements KompicsEvent, Serializable {

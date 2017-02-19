@@ -40,7 +40,7 @@ public class RIWC extends ComponentDefinition {
     protected final Handler<AR_Read_Request> readRequestHandler = new Handler<AR_Read_Request>() {
         @Override
         public void handle(AR_Read_Request ar_read_request) {
-            LOG.info("Receive an AR_Read_Request for {}",ar_read_request.getKey());
+            LOG.info("Receive an AR_Read_Request for {}", ar_read_request.getKey());
             rid = rid + 1;
             acks = 0;
             readList.clear();
@@ -51,7 +51,7 @@ public class RIWC extends ComponentDefinition {
     protected final Handler<AR_Write_Request> writeRequestHandler = new Handler<AR_Write_Request>() {
         @Override
         public void handle(AR_Write_Request ar_write_request) {
-            LOG.info("Receive an AR_Write_Request for {} with {}",ar_write_request.getKey(), ar_write_request.getValue());
+            LOG.info("Receive an AR_Write_Request for {} with {}", ar_write_request.getKey(), ar_write_request.getValue());
             rid = rid + 1;
             writeVal = ar_write_request.getValue();
             acks = 0;
@@ -227,7 +227,7 @@ public class RIWC extends ComponentDefinition {
         }
 
         private boolean isLowerOrEqualThan(Triplet triplet) {
-            return (this.ts <= triplet.getTs()) || ((this.ts <= triplet.getTs()) && (this.wr <= triplet.getWr()));
+            return (this.ts < triplet.getTs()) || ((this.ts <= triplet.getTs()) && (this.wr <= triplet.getWr()));
         }
     }
 

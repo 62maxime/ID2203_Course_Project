@@ -5,7 +5,6 @@ import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.Init;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by 62maxime on 17/02/2017.

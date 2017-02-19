@@ -140,7 +140,7 @@ public class KVService extends ComponentDefinition {
      */
     private final void nextTask() {
         busy = false;
-        if (pending.isEmpty()){
+        if (pending.isEmpty()) {
             return;
         }
         Message message = pending.removeFirst();
