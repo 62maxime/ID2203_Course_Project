@@ -1,5 +1,6 @@
 package se.kth.id2203.simulation.group;
 
+import com.google.common.collect.TreeMultimap;
 import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,11 @@ import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Created by ralambom on 16/02/17.
@@ -33,6 +38,7 @@ public class ScenarioOverlay extends ComponentDefinition {
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private LookupTable lut = null;
     private ReplicationGroup replicationGroup;
+    private SimulationResultMapG res = SimulationResultSingletonG.getInstance();
     //******* Handlers ******
     protected final Handler<GetInitialAssignments> initialAssignmentHandler = new Handler<GetInitialAssignments>() {
 
@@ -56,7 +62,16 @@ public class ScenarioOverlay extends ComponentDefinition {
                 LOG.info("Got NodeAssignment, overlay ready.");
                 lut = (LookupTable) event.assignment;
                 replicationGroup = lut.getKey(self);
-                SimulationResult.setResultTable(self, lut);
+                HashMap<Integer, ArrayList<String>> lutString = new HashMap<>();
+                for(int key : lut.getPartitions().keySet()) {
+                    ArrayList<String> addresses = new ArrayList<>();
+                    Set<NetAddress> set = lut.getPartitions().get(key);
+                    for(NetAddress add : set) {
+                        addresses.add(add.toString());
+                    }
+                    lutString.put(key, addresses);
+                }
+                res.put(self.toString(), lutString);
                 LOG.info("[Node] Address: " + self +
                         "; ReplicationGroup: " + replicationGroup.getNodes().toString() +
                         "; Table: " + lut.getPartitions().toString());

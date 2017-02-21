@@ -28,8 +28,8 @@ public class ScenarioGen {
 
                 {
                     try {
-                        selfAdr = new NetAddress(InetAddress.getByName("192.168.0." + self), 45678);
-                        bsAdr = new NetAddress(InetAddress.getByName("192.168.0.1"), 45678);
+                        selfAdr = new NetAddress(InetAddress.getByName("127.0.0." + self), 45678);
+                        bsAdr = new NetAddress(InetAddress.getByName("127.0.0.1"), 45678);
                     } catch (UnknownHostException ex) {
                         throw new RuntimeException(ex);
                     }
