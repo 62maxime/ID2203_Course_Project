@@ -264,7 +264,7 @@ public abstract class ScenarioGen {
         };
     }
 
-    public static SimulationScenario twoClientsAlternatif(final int servers) {
+    public static SimulationScenario twoClientsAlternate(final int servers) {
         return new SimulationScenario() {
             {
                 StochasticProcess startCluster = new StochasticProcess() {
@@ -302,4 +302,45 @@ public abstract class ScenarioGen {
             }
         };
     }
+
+    public static SimulationScenario threeClientsConcurrentOperation(final int servers) {
+        return new SimulationScenario() {
+            {
+                StochasticProcess startCluster = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(servers, startServerOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                StochasticProcess startWrite1 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startClientOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+                StochasticProcess startRead1 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(2),
+                                new BasicIntSequentialDistribution(2), new BasicIntSequentialDistribution(2));
+                    }
+                };
+                StochasticProcess startRead2 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(3),
+                                new BasicIntSequentialDistribution(3), new BasicIntSequentialDistribution(3));
+                    }
+                };
+                startCluster.start();
+                startWrite1.startAfterTerminationOf(20000, startCluster);
+                startRead1.startAfterTerminationOf(20000, startCluster);
+                startRead2.startAfterTerminationOf(2000, startRead1);
+                terminateAfterTerminationOf(1000, startRead2);
+            }
+        };
+    }
+
+
 }

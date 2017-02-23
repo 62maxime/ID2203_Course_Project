@@ -65,6 +65,8 @@ public class ScenarioClient extends ComponentDefinition {
                 test2();
             } else if (testNum == 3) {
                 test3();
+            } else if (testNum == 4) {
+                test4();
             }
 
         }
@@ -94,7 +96,7 @@ public class ScenarioClient extends ComponentDefinition {
                     res.put(key, "NOT_FOUND");
                 } else {
                     int testNum = res.get("testNum", Integer.class);
-                    if (testNum == 2) {
+                    if (testNum == 2 || testNum == 4) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, content.getValue().getValue());
                     } else if (testNum == 3) {
@@ -104,7 +106,7 @@ public class ScenarioClient extends ComponentDefinition {
                             sendPut("write", client);
                             res.put("client" + 1, "PUT");
                         }
-                    } else {
+                    }  else {
                         res.put(key, content.getValue().getValue());
                     }
 
@@ -180,6 +182,18 @@ public class ScenarioClient extends ComponentDefinition {
                 res.put("client" + 1, "GET");
             }
 
+        }
+    }
+
+    private void test4() {
+        int client = config().getValue("id2203.project.client", Integer.class);
+        if (client == 1) {
+            sendPut("write", 2);
+            res.put("client" + 2, "PUT");
+            res.put("client" + 3, "PUT");
+        } else {
+            sendGet("write");
+            res.put("client" + client, "GET");
         }
     }
 
