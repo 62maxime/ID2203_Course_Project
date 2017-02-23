@@ -30,12 +30,12 @@ import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.run.LauncherComp;
 
 import java.util.HashMap;
+
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class OpsTest {
-    
+
     private static final int NUM_MESSAGES_OK = 3;
     private static final int NUM_MESSAGES_NOT_FOUND = 7;
     private final SimulationResultMap res = SimulationResultSingleton.getInstance();
@@ -50,19 +50,19 @@ public class OpsTest {
         long seed = 123;
         SimulationScenario.setSeed(seed);
         SimulationScenario simpleBootScenario = ScenarioGen.simpleOps(6);
-        res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND );
+        res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND);
+        res.put("testNum", 1);
         simpleBootScenario.simulate(LauncherComp.class);
         for (int i = 0; i < NUM_MESSAGES_OK; i++) {
             String k = "test" + i;
-            Integer kvEntry =  res.get(k, Integer.class);
+            Integer kvEntry = res.get(k, Integer.class);
             Assert.assertEquals(store.get(k.hashCode()).getValue(), kvEntry);
         }
-        for (int j = NUM_MESSAGES_OK; j < NUM_MESSAGES_NOT_FOUND+ NUM_MESSAGES_OK; j++){
+        for (int j = NUM_MESSAGES_OK; j < NUM_MESSAGES_NOT_FOUND + NUM_MESSAGES_OK; j++) {
             String k = "test" + j;
             Assert.assertEquals("NOT_FOUND", res.get(k, String.class));
         }
     }
-
 
 
 }

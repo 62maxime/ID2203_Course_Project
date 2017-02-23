@@ -60,14 +60,12 @@ public class KVService extends ComponentDefinition {
     protected final Positive<AscPort> asc = requires(AscPort.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
-    private HashMap<UUID, NetAddress> pending;
     private NetAddress leader = null;
     private HashMap<Integer, KVEntry> store;
 
     //******* Constructor ******
     public KVService(KVServiceInit init) {
         this.store = new HashMap<>(init.getStore());
-        this.pending = new HashMap<>();
     }
 
     //******* Handlers ******
@@ -89,7 +87,6 @@ public class KVService extends ComponentDefinition {
             LOG.debug("Got {}", content);
             if (leader.equals(self)) {
                 LOG.debug("{} is the leader, propose {}", self, content);
-                pending.put(content.id, context.getSource());
                 trigger(new AscPropose(content), asc);
             } else {
                 LOG.debug("{} is not the leader, forward {}", self, content);
@@ -105,7 +102,6 @@ public class KVService extends ComponentDefinition {
             LOG.debug("Got {}", content);
             if (leader.equals(self)) {
                 LOG.debug("{} is the leader, propose {}", self, content);
-                pending.put(content.id, context.getSource());
                 trigger(new AscPropose(content), asc);
             } else {
                 LOG.debug("{} is not the leader, forward {}", self, content);
@@ -129,7 +125,7 @@ public class KVService extends ComponentDefinition {
             UUID uuid = getRequest.id;
             KVEntry value = store.get(key);
             NetAddress address = getRequest.getSource();
-            LOG.debug("Result {} {} {} {}", uuid, value, address, pending);
+            LOG.debug("Result {} {} {}", uuid, value, address);
             if (address == null || !(leader.equals(self))) {
                 return;
             }
