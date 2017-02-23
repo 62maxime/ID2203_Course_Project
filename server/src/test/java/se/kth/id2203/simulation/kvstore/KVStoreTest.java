@@ -99,7 +99,7 @@ public class KVStoreTest {
         Object res1 = res.get("client2", Object.class);
         if (res1 instanceof String) {
             if (res1.equals("NOT_FOUND")) {
-                res1 = null;
+                res1 = new Integer(null);
             }
         }
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
@@ -116,7 +116,7 @@ public class KVStoreTest {
         Object res1 = res.get("client2", Object.class);
         if (res1 instanceof String) {
             if (res1.equals("NOT_FOUND")) {
-                res1 = null;
+                res1 = new Integer(null);
             }
         }
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
