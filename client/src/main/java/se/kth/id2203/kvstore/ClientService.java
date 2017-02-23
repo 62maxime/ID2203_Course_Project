@@ -166,14 +166,14 @@ public class ClientService extends ComponentDefinition {
     }
 
     Future<OpResponse> get(String key) {
-        GetRequest op = new GetRequest(key);
+        GetRequest op = new GetRequest(key, self);
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
 
     Future<OpResponse> put(String key, String value) {
-        PutRequest op = new PutRequest(key, new KVEntry(key.hashCode(), Integer.parseInt(value)));
+        PutRequest op = new PutRequest(key, self, new KVEntry(key.hashCode(), Integer.parseInt(value)));
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;

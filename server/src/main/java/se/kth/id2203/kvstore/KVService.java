@@ -128,9 +128,9 @@ public class KVService extends ComponentDefinition {
             Integer key = getRequest.key.hashCode();
             UUID uuid = getRequest.id;
             KVEntry value = store.get(key);
-            NetAddress address = pending.remove(uuid);
-
-            if (address == null) {
+            NetAddress address = getRequest.getSource();
+            LOG.debug("Result {} {} {} {}", uuid, value, address, pending);
+            if (address == null || !(leader.equals(self))) {
                 return;
             }
 
@@ -147,12 +147,14 @@ public class KVService extends ComponentDefinition {
             LOG.debug("Decide {}", putRequest);
             Integer key = putRequest.key.hashCode();
             UUID uuid = putRequest.id;
-            NetAddress address = pending.remove(uuid);
+            NetAddress address = putRequest.getSource();
             if (address == null) {
                 return;
             }
             store.put(key, putRequest.getValue());
-            trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
+            if (leader.equals(self)) {
+                trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
+            }
         }
     };
 

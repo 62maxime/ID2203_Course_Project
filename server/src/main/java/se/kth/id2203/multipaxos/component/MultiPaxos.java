@@ -175,7 +175,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<PrepareAck> prepareAckHandler = new Handler<PrepareAck>() {
         @Override
         public void handle(PrepareAck prepareAck) {
-            LOG.debug("PrepareNack {}", prepareAck);
+            LOG.debug("PrepareAck {}", prepareAck);
             t = Math.max(t, prepareAck.getT()) + 1;
             if (prepareAck.getPts() == pts) {
                 readlist.put(prepareAck.getSource(), new ReadItem(prepareAck.getTs(), prepareAck.getVsuf()));

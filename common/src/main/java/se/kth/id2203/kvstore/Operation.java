@@ -24,6 +24,7 @@
 package se.kth.id2203.kvstore;
 
 import com.google.common.base.MoreObjects;
+import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
 
 import java.io.Serializable;
@@ -38,10 +39,17 @@ public class Operation implements KompicsEvent, Serializable {
 
     public final String key;
     public final UUID id;
+    private NetAddress source;
 
     public Operation(String key) {
         this.key = key;
         this.id = UUID.randomUUID();
+    }
+
+    public Operation(String key, NetAddress source) {
+        this.key = key;
+        this.id = UUID.randomUUID();
+        this.source = source;
     }
 
     @Override
@@ -50,5 +58,14 @@ public class Operation implements KompicsEvent, Serializable {
                 .add("id", id)
                 .add("key", key)
                 .toString();
+    }
+
+    public void setSource(NetAddress source) {
+        this.source = source;
+    }
+
+    public NetAddress getSource() {
+
+        return source;
     }
 }

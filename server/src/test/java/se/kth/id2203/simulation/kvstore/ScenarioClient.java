@@ -148,6 +148,7 @@ public class ScenarioClient extends ComponentDefinition {
 
     private void sendGet(String key) {
         GetRequest op = new GetRequest(key);
+        op.setSource(self);
         RouteMsg rm = new RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(new Message(self, server, rm), net);
         pending.put(op.id, op.key);
@@ -157,6 +158,7 @@ public class ScenarioClient extends ComponentDefinition {
 
     private void sendPut(String key, Integer value) {
         PutRequest put = new PutRequest(key, new KVEntry(key.hashCode(), value));
+        put.setSource(self);
         RouteMsg rm = new RouteMsg(put.key, put); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(new Message(self, server, rm), net);
         pending.put(put.id, put.key);
