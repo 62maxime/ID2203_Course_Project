@@ -35,4 +35,13 @@ public class AcceptAck extends NetMessage implements Serializable {
     public int getT() {
         return t;
     }
+
+    @Override
+    public String toString() {
+        return "AcceptAck{" +
+                "pts=" + pts +
+                ", l=" + l +
+                ", t=" + t +
+                '}';
+    }
 }

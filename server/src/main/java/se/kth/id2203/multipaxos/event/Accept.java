@@ -43,4 +43,14 @@ public class Accept extends NetMessage implements Serializable {
     public int getT() {
         return t;
     }
+
+    @Override
+    public String toString() {
+        return "Accept{" +
+                "ts=" + ts +
+                ", vsuf=" + vsuf +
+                ", offs=" + offs +
+                ", t=" + t +
+                '}';
+    }
 }

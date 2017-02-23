@@ -35,4 +35,13 @@ public class Prepare extends NetMessage implements Serializable {
     public int getL() {
         return l;
     }
+
+    @Override
+    public String toString() {
+        return "Prepare{" +
+                "ts=" + ts +
+                ", l=" + l +
+                ", t=" + t +
+                '}';
+    }
 }

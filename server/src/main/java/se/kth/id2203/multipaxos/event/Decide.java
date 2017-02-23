@@ -35,4 +35,13 @@ public class Decide extends NetMessage implements Serializable {
     public int getT() {
         return t;
     }
+
+    @Override
+    public String toString() {
+        return "Decide{" +
+                "ts=" + ts +
+                ", l=" + l +
+                ", t=" + t +
+                '}';
+    }
 }

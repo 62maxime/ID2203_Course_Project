@@ -53,8 +53,8 @@ public class MultiPaxos extends ComponentDefinition {
     public MultiPaxos(MultiPaxosInit init) {
 
         this.self = init.getSelf();
-        this.selfRank = init.getSelfRank();
-
+        this.selfRank = init.getSelf().getRank();
+        LOG.debug("RANK {}", selfRank);
         this.t = 0;
         this.prepts = 0;
 
@@ -110,6 +110,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<AscPropose> proposeHandler = new Handler<AscPropose>() {
         @Override
         public void handle(AscPropose ascPropose) {
+            LOG.debug("Propose {}", ascPropose.getOperation());
             t++;
             currentOperation = ascPropose.getOperation();
             if (pts == 0) {
@@ -146,6 +147,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<Prepare> prepareHandler = new Handler<Prepare>() {
         @Override
         public void handle(Prepare prepare) {
+            LOG.debug("Prepare {} {}", prepare, prepts);
             t = Math.max(t, prepare.getT()) + 1;
             if (prepare.getTs() < prepts) {
                 trigger(new Nack(self, prepare.getSource(), prepare.getTs(), t), fpl);
@@ -159,6 +161,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<Nack> nackHandler = new Handler<Nack>() {
         @Override
         public void handle(Nack nack) {
+            LOG.debug("Nack {}", nack);
             t = Math.max(t, nack.getT()) + 1;
             if (nack.getPts() == pts) {
                 pts = 0;
@@ -172,6 +175,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<PrepareAck> prepareAckHandler = new Handler<PrepareAck>() {
         @Override
         public void handle(PrepareAck prepareAck) {
+            LOG.debug("PrepareNack {}", prepareAck);
             t = Math.max(t, prepareAck.getT()) + 1;
             if (prepareAck.getPts() == pts) {
                 readlist.put(prepareAck.getSource(), new ReadItem(prepareAck.getTs(), prepareAck.getVsuf()));
@@ -210,6 +214,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<Accept> acceptHandler = new Handler<Accept>() {
         @Override
         public void handle(Accept accept) {
+            LOG.debug("Accept {}", accept);
             t = Math.max(t, accept.getT());
             if (accept.getTs() != prepts) {
                 trigger(new Nack(self, accept.getSource(), accept.getTs(), t), fpl);
@@ -227,6 +232,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<AcceptAck> acceptAckHandler = new Handler<AcceptAck>() {
         @Override
         public void handle(AcceptAck acceptAck) {
+            LOG.debug("AcceptAck {}", acceptAck);
             t = Math.max(t, acceptAck.getT()) + 1;
             if (acceptAck.getPts() == pts) {
                 accepted.put(acceptAck.getSource(), acceptAck.getL());
@@ -251,6 +257,7 @@ public class MultiPaxos extends ComponentDefinition {
     private Handler<Decide> decideHandler = new Handler<Decide>() {
         @Override
         public void handle(Decide decide) {
+            LOG.debug("Decide {}", decide);
             t = Math.max(t, decide.getT());
             if (decide.getTs() == prepts) {
                 while (al < decide.getL()) {

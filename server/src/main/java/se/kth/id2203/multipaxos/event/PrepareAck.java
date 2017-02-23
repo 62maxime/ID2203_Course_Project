@@ -49,4 +49,15 @@ public class PrepareAck extends NetMessage implements Serializable {
     public int getT() {
         return t;
     }
+
+    @Override
+    public String toString() {
+        return "PrepareAck{" +
+                "pts=" + pts +
+                ", ts=" + ts +
+                ", vsuf=" + vsuf +
+                ", l=" + l +
+                ", t=" + t +
+                '}';
+    }
 }
