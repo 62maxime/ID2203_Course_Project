@@ -48,12 +48,12 @@ public class BestEffortBroadcast extends ComponentDefinition {
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
     };
-    protected final ClassMatchedHandler<GroupTopology,Message> topologyMessageHandler = new ClassMatchedHandler<GroupTopology, Message>() {
+    protected final ClassMatchedHandler<GroupTopology, Message> topologyMessageHandler = new ClassMatchedHandler<GroupTopology, Message>() {
         @Override
         public void handle(GroupTopology topo, Message message) {
             LOG.debug("Received Topology " + topo.getTopology().toString());
             topology.clear();
-            topology.addAll(topo.getTopology());
+            topology.addAll(topo.getTopology().getNodes());
         }
     };
 

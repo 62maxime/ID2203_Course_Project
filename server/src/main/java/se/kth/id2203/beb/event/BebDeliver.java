@@ -1,7 +1,6 @@
 package se.kth.id2203.beb.event;
 
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.sharedmemory.event.Read;
 import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.PatternExtractor;
 

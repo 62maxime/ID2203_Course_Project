@@ -2,7 +2,6 @@ package se.kth.id2203.epfd.component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.beb.component.BestEffortBroadcast;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.event.Restore;
@@ -27,7 +26,7 @@ public class Epfd extends ComponentDefinition {
 
     //EPFD subscriptions
     private Positive<Timer> timer = requires(Timer.class);
-    private Positive<Network> pLink= requires(Network.class);
+    private Positive<Network> pLink = requires(Network.class);
     private Negative<EventuallyPerfectFailureDetector> epfd = provides(EventuallyPerfectFailureDetector.class);
 
     // EPDF component state and initialization
@@ -65,8 +64,7 @@ public class Epfd extends ComponentDefinition {
 
     //Handlers
 
-    private Handler<Start> startHandler = new Handler<Start>()
-    {
+    private Handler<Start> startHandler = new Handler<Start>() {
         @Override
         public void handle(Start start) {
             startTimer(period);
@@ -77,19 +75,18 @@ public class Epfd extends ComponentDefinition {
     private Handler<CheckTimeout> checkTimeoutHandler = new Handler<CheckTimeout>() {
         @Override
         public void handle(CheckTimeout checkTimeout) {
-            for(NetAddress address : alive) {
-                if(suspected.contains(address)) {
+            for (NetAddress address : alive) {
+                if (suspected.contains(address)) {
                     period += delta;
                     break;
                 }
             }
-            seqnum ++;
-            for(NetAddress p : topology) {
-                if(!alive.contains(p) && !suspected.contains(p)) {
+            seqnum++;
+            for (NetAddress p : topology) {
+                if (!alive.contains(p) && !suspected.contains(p)) {
                     suspected.add(p);
                     trigger(new Suspect(p), epfd);
-                }
-                else if(alive.contains(p) && suspected.contains(p)){
+                } else if (alive.contains(p) && suspected.contains(p)) {
                     suspected.remove(p);
                     trigger(new Restore(p), epfd);
                 }
@@ -104,7 +101,7 @@ public class Epfd extends ComponentDefinition {
         @Override
         public void handle(HeartbeatRequest heartbeatRequest) {
             LOG.debug(self.toString() + " receives a heartbeat request from " + heartbeatRequest.getSource());
-            trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), heartbeatRequest.getSeqnum()),pLink);
+            trigger(new HeartbeatReply(self, heartbeatRequest.getSource(), heartbeatRequest.getSeqnum()), pLink);
         }
     };
 
@@ -114,7 +111,7 @@ public class Epfd extends ComponentDefinition {
             LOG.debug(self.toString() + " receives a heartbeat reply from " + heartbeatReply.getSource()
                     + "with seqnum " + heartbeatReply.getSeqnum() + " internal " + seqnum);
 
-            if(topology.contains(heartbeatReply.getSource())) {
+            if (topology.contains(heartbeatReply.getSource())) {
                 if (heartbeatReply.getSeqnum() == seqnum || suspected.contains(heartbeatReply.getSource())) {
                     alive.add(heartbeatReply.getSource());
                 }
@@ -125,7 +122,7 @@ public class Epfd extends ComponentDefinition {
     private Handler<ListenTo> listenToHandler = new Handler<ListenTo>() {
         @Override
         public void handle(ListenTo listenTo) {
-            LOG.debug("ListenTo from " + self+ " for " +  listenTo.getAddresses().toString());
+            LOG.debug("ListenTo from " + self + " for " + listenTo.getAddresses().toString());
             trigger(new CancelTimeout(timerId), timer);
             topology.addAll(listenTo.getAddresses());
             alive.addAll(listenTo.getAddresses());

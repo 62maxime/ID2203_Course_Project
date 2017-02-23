@@ -160,7 +160,7 @@ public class RIWC extends ComponentDefinition {
         @Override
         public void handle(GroupTopology topology, Message message) {
             LOG.debug("Received Topology " + topology.getTopology().toString());
-            n = topology.getTopology().size();
+            n = topology.getTopology().getSize();
         }
     };
 

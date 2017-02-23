@@ -3,8 +3,6 @@ package se.kth.id2203.multipaxos.event;
 import se.kth.id2203.overlay.ReplicationGroup;
 import se.sics.kompics.KompicsEvent;
 
-import java.util.Set;
-
 /**
  * Created by ralambom on 23/02/17.
  */

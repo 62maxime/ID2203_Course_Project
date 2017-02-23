@@ -23,9 +23,9 @@
  */
 package se.kth.id2203.bootstrapping.port;
 
+import se.kth.id2203.bootstrapping.event.Booted;
 import se.kth.id2203.bootstrapping.event.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.event.InitialAssignments;
-import se.kth.id2203.bootstrapping.event.Booted;
 import se.sics.kompics.PortType;
 
 public class Bootstrapping extends PortType {

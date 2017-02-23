@@ -35,7 +35,6 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class HostComponent extends ComponentDefinition {

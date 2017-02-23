@@ -27,15 +27,14 @@ import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.bootstrapping.event.Booted;
-import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.bootstrapping.event.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.event.InitialAssignments;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.common.port.GroupTopology;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
-import se.kth.id2203.multipaxos.component.MultiPaxos;
 import se.kth.id2203.multipaxos.event.MPgroup;
 import se.kth.id2203.multipaxos.port.AscPort;
 import se.kth.id2203.networking.Message;
@@ -142,7 +141,7 @@ public class VSOverlayManager extends ComponentDefinition {
         replicationGroup = lut.getKey(self);
         trigger(new Reset(new EpfdInit(self, delta, period)), epfd);
         trigger(new ListenTo(replicationGroup.getNodes()), epfd); // TODO listen to the whole group for BEB
-        trigger(new Message(self, self, new GroupTopology(replicationGroup.getNodes())), net);
+        trigger(new Message(self, self, new GroupTopology(replicationGroup)), net);
         booted = true;
     }
 

@@ -56,7 +56,7 @@ public class MELD extends ComponentDefinition {
         public void handle(GroupTopology group, Message message) {
             LOG.debug("Received Topology " + group.getTopology().toString());
             topology.clear();
-            topology.addAll(group.getTopology());
+            topology.addAll(group.getTopology().getNodes());
             changeLeader();
         }
     };

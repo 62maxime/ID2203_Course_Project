@@ -45,4 +45,12 @@ public class ReplicationGroup {
     public int getSize() {
         return size;
     }
+
+    @Override
+    public String toString() {
+        return "ReplicationGroup{" +
+                ", nodes=" + nodes +
+                ", size=" + size +
+                '}';
+    }
 }

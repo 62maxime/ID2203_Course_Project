@@ -13,4 +13,8 @@ public class AscAbort implements KompicsEvent {
     public AscAbort(Operation operation) {
         this.operation = operation;
     }
+
+    public Operation getOperation() {
+        return operation;
+    }
 }
