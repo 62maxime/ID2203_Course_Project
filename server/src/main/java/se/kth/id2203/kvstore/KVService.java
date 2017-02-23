@@ -79,19 +79,22 @@ public class KVService extends ComponentDefinition {
         }
 
     };
+    private void proposeOperation(Operation content) {
+        LOG.debug("Got {}", content);
+        if (leader.equals(self)) {
+            LOG.debug("{} is the leader, propose {}", self, content);
+            trigger(new AscPropose(content), asc);
+        } else {
+            LOG.debug("{} is not the leader, forward {}", self, content);
+            trigger(new Message(self, leader, content), net);
+        }
+    }
 
     protected final ClassMatchedHandler<GetRequest, Message> getHandler = new ClassMatchedHandler<GetRequest, Message>() {
 
         @Override
         public void handle(GetRequest content, Message context) {
-            LOG.debug("Got {}", content);
-            if (leader.equals(self)) {
-                LOG.debug("{} is the leader, propose {}", self, content);
-                trigger(new AscPropose(content), asc);
-            } else {
-                LOG.debug("{} is not the leader, forward {}", self, content);
-                trigger(new Message(self, leader, content), net);
-            }
+            proposeOperation(content);
         }
 
     };
@@ -99,14 +102,7 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(PutRequest content, Message context) {
-            LOG.debug("Got {}", content);
-            if (leader.equals(self)) {
-                LOG.debug("{} is the leader, propose {}", self, content);
-                trigger(new AscPropose(content), asc);
-            } else {
-                LOG.debug("{} is not the leader, forward {}", self, content);
-                trigger(new Message(self, leader, content), net);
-            }
+            proposeOperation(content);
         }
 
     };
@@ -114,14 +110,7 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(CasRequest content, Message context) {
-            LOG.debug("Got {}", content);
-            if (leader.equals(self)) {
-                LOG.debug("{} is the leader, propose {}", self, content);
-                trigger(new AscPropose(content), asc);
-            } else {
-                LOG.debug("{} is not the leader, forward {}", self, content);
-                trigger(new Message(self, leader, content), net);
-            }
+            proposeOperation(content);
         }
 
     };
