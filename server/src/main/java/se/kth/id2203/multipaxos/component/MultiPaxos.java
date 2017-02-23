@@ -54,7 +54,6 @@ public class MultiPaxos extends ComponentDefinition {
     public MultiPaxos(MultiPaxosInit init) {
 
         this.self = init.getSelf();
-        this.replicationGroup = init.getReplicationGroup();
         this.selfRank = init.getSelfRank();
 
         this.t = 0;
@@ -78,6 +77,7 @@ public class MultiPaxos extends ComponentDefinition {
         }
 
         //subscriptions to handlers
+        subscribe(mPgroupHandler, asc);
         subscribe(proposeHandler, asc);
         subscribe(prepareHandler, fpl);
         subscribe(nackHandler, fpl);
@@ -89,6 +89,19 @@ public class MultiPaxos extends ComponentDefinition {
 
 
     //******* Handlers ******
+
+        // FETCH REPLICATION GROUP
+
+    private Handler<MPgroup> mPgroupHandler = new Handler<MPgroup>() {
+        @Override
+        public void handle(MPgroup mPgroup) {
+            replicationGroup = mPgroup.getGroup();
+            for(NetAddress add : replicationGroup.getNodes()) {
+                accepted.put(add, 0);
+                decided.put(add, 0);
+            }
+        }
+    };
 
         // PREPARE PHASE
 
