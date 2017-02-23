@@ -30,6 +30,7 @@ import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.run.LauncherComp;
 
 import java.util.HashMap;
+import java.util.StringTokenizer;
 
 /**
  * @author Lars Kroll <lkroll@kth.se>
@@ -95,8 +96,13 @@ public class KVStoreTest {
         SimulationScenario simpleBootScenario = ScenarioGen.threeClientsConcurrentOperation(6);
         res.put("testNum", 4);
         simpleBootScenario.simulate(LauncherComp.class);
-        Integer res1 = res.get("client2", Integer.class);
-        Assert.assertTrue((res1 == null) || (res1 == 2));
+        Object res1 = res.get("client2", Object.class);
+        if (res1 instanceof String) {
+            if (res1.equals("NOT_FOUND")) {
+                res1 = null;
+            }
+        }
+        Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
         Assert.assertEquals(new Integer(2), res.get("client3", Integer.class));
     }
 
@@ -107,8 +113,13 @@ public class KVStoreTest {
         SimulationScenario simpleBootScenario = ScenarioGen.failedWrite(6);
         res.put("testNum", 5);
         simpleBootScenario.simulate(LauncherComp.class);
-        Integer res1 = res.get("client2", Integer.class);
-        Assert.assertTrue((res1 == null) || (res1 == 2));
+        Object res1 = res.get("client2", Object.class);
+        if (res1 instanceof String) {
+            if (res1.equals("NOT_FOUND")) {
+                res1 = null;
+            }
+        }
+        Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
     }
 
 

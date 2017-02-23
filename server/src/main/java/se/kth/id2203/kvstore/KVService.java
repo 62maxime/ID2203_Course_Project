@@ -110,6 +110,21 @@ public class KVService extends ComponentDefinition {
         }
 
     };
+    protected final ClassMatchedHandler<CasRequest, Message> casHandler = new ClassMatchedHandler<CasRequest, Message>() {
+
+        @Override
+        public void handle(CasRequest content, Message context) {
+            LOG.debug("Got {}", content);
+            if (leader.equals(self)) {
+                LOG.debug("{} is the leader, propose {}", self, content);
+                trigger(new AscPropose(content), asc);
+            } else {
+                LOG.debug("{} is not the leader, forward {}", self, content);
+                trigger(new Message(self, leader, content), net);
+            }
+        }
+
+    };
     protected final Handler<Trust> trustHandler = new Handler<Trust>() {
         @Override
         public void handle(Trust trust) {
@@ -153,6 +168,27 @@ public class KVService extends ComponentDefinition {
             }
         }
     };
+    protected final ClassMatchedHandler<CasRequest, AscDecide> casRequestClassMatchedHandler = new ClassMatchedHandler<CasRequest, AscDecide>() {
+        @Override
+        public void handle(CasRequest casRequest, AscDecide ascDecide) {
+            LOG.debug("Decide {}", casRequest);
+            Integer key = casRequest.key.hashCode();
+            UUID uuid = casRequest.id;
+            NetAddress address = casRequest.getSource();
+            if (address == null) {
+                return;
+            }
+            KVEntry value = store.get(key);
+            boolean success = false;
+            if (value.getValue().equals(casRequest.getOldValue().getValue())) {
+                store.put(key, casRequest.getNewValue());
+                success = true;
+            }
+            if (leader.equals(self)) {
+                trigger(new Message(self, address, new CasResponse(uuid, Code.OK, success)), net);
+            }
+        }
+    };
 
     protected final Handler<AscAbort> abortHandler = new Handler<AscAbort>() {
         @Override
@@ -167,9 +203,11 @@ public class KVService extends ComponentDefinition {
         subscribe(opHandler, net);
         subscribe(getHandler, net);
         subscribe(putHandler, net);
+        subscribe(casHandler, net);
         subscribe(trustHandler, meld);
         subscribe(getRequestClassMatchedHandler, asc);
         subscribe(putRequestClassMatchedHandler, asc);
+        subscribe(casRequestClassMatchedHandler, asc);
         subscribe(abortHandler, asc);
     }
 
