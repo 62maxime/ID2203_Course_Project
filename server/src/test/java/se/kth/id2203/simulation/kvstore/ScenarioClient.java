@@ -106,11 +106,16 @@ public class ScenarioClient extends ComponentDefinition {
         public void handle(GetResponse content, Message context) {
             LOG.debug("Got GetResponse: {}", content);
             String key = pending.remove(content.id);
+            int testNum = res.get("testNum", Integer.class);
             if (key != null) {
                 if (content.getValue() == null) {
-                    res.put(key, "NOT_FOUND");
+                    if (testNum == 4 || testNum == 5) {
+                        int client = config().getValue("id2203.project.client", Integer.class);
+                        res.put("client" + client, "NOT_FOUND");
+                    } else {
+                        res.put(key, "NOT_FOUND");
+                    }
                 } else {
-                    int testNum = res.get("testNum", Integer.class);
                     if (testNum == 2 || testNum == 4  || testNum == 5) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, content.getValue().getValue());

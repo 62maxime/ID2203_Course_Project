@@ -97,9 +97,10 @@ public class KVStoreTest {
         res.put("testNum", 4);
         simpleBootScenario.simulate(LauncherComp.class);
         Object res1 = res.get("client2", Object.class);
+        System.out.println(res1);
         if (res1 instanceof String) {
             if (res1.equals("NOT_FOUND")) {
-                res1 = new Integer(null);
+                res1 = null;
             }
         }
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
@@ -116,7 +117,7 @@ public class KVStoreTest {
         Object res1 = res.get("client2", Object.class);
         if (res1 instanceof String) {
             if (res1.equals("NOT_FOUND")) {
-                res1 = new Integer(null);
+                res1 = null;
             }
         }
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
