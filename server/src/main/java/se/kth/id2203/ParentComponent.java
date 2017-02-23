@@ -95,6 +95,7 @@ public class ParentComponent
         // MELD
         connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
                 meld.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
+        connect(net, meld.getNegative(Network.class), Channel.TWO_WAY);
 
 
 
