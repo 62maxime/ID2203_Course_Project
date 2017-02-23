@@ -17,6 +17,8 @@ import se.kth.id2203.kvstore.KVService;
 import se.kth.id2203.kvstore.KVServiceInit;
 import se.kth.id2203.leaderdetection.component.MELD;
 import se.kth.id2203.leaderdetection.component.MELDInit;
+import se.kth.id2203.multipaxos.component.MultiPaxos;
+import se.kth.id2203.multipaxos.component.MultiPaxosInit;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
@@ -47,6 +49,7 @@ public class ParentComponent
     protected final Component beb = create(BestEffortBroadcast.class, new BebInit(self, new HashSet<NetAddress>()));
     protected final Component riwc;
     protected final Component meld = create(MELD.class, new MELDInit(new HashSet<NetAddress>()));
+    protected final Component multipaxos = create(MultiPaxos.class, new MultiPaxosInit(self, self.hashCode()));
 
     {
         HashMap<Integer, KVEntry> store = new HashMap<>();

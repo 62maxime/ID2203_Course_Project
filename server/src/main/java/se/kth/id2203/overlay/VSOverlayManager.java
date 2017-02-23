@@ -35,6 +35,9 @@ import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
+import se.kth.id2203.multipaxos.component.MultiPaxos;
+import se.kth.id2203.multipaxos.event.MPgroup;
+import se.kth.id2203.multipaxos.port.AscPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.*;
@@ -63,6 +66,7 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Positive<Network> net = requires(Network.class);
     protected final Positive<Timer> timer = requires(Timer.class);
     protected final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
+    protected final Positive<AscPort> asc = requires(AscPort.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private LookupTable lut = null;
@@ -90,6 +94,7 @@ public class VSOverlayManager extends ComponentDefinition {
                 LOG.info("Got NodeAssignment, overlay ready.");
                 lut = (LookupTable) event.assignment;
                 initEpfd();
+                trigger(new MPgroup(lut.getKey(self)), asc);
             } else {
                 LOG.error("Got invalid NodeAssignment type. Expected: LookupTable; Got: {}", event.assignment.getClass());
             }
