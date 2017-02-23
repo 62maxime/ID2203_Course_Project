@@ -21,17 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.event;
 
-import com.google.common.collect.ImmutableSet;
-import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.KompicsEvent;
+import java.io.Serializable;
 
-public class GetInitialAssignments implements KompicsEvent {
+public interface NodeAssignment extends Serializable {
 
-    public final ImmutableSet<NetAddress> nodes;
-
-    public GetInitialAssignments(final ImmutableSet<NetAddress> nodes) {
-        this.nodes = nodes;
-    }
 }

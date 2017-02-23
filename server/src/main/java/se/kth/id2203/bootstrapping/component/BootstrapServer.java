@@ -21,11 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.component;
 
 import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.bootstrapping.event.*;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;

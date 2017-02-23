@@ -21,19 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.event;
 
 import se.sics.kompics.KompicsEvent;
 
 import java.io.Serializable;
 
-public class Boot implements KompicsEvent, Serializable {
+public class CheckIn implements KompicsEvent, Serializable {
 
-    private static final long serialVersionUID = -4700507659951599133L;
+    public final static CheckIn event = new CheckIn();
+    private static final long serialVersionUID = -5044901955690784224L;
 
-    public final NodeAssignment assignment;
-
-    public Boot(NodeAssignment assignment) {
-        this.assignment = assignment;
+    private CheckIn() {
     }
 }

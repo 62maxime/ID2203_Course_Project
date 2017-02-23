@@ -33,12 +33,8 @@ import java.util.Random;
 import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.bootstrapping.NodeAssignment;
+import se.kth.id2203.bootstrapping.event.NodeAssignment;
 import se.kth.id2203.networking.NetAddress;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
 
 /**
  * @author Lars Kroll <lkroll@kth.se>

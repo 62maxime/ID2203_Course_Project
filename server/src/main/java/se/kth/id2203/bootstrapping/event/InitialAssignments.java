@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.event;
 
-import se.sics.kompics.PortType;
+import se.sics.kompics.KompicsEvent;
 
-public class Bootstrapping extends PortType {
+public class InitialAssignments implements KompicsEvent {
 
-    {
-        indication(GetInitialAssignments.class);
-        indication(Booted.class);
-        request(InitialAssignments.class);
+    public final NodeAssignment assignment;
+
+    public InitialAssignments(final NodeAssignment assignment) {
+        this.assignment = assignment;
     }
 }

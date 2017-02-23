@@ -3,22 +3,13 @@ package se.kth.id2203.simulation.group;
 import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.bootstrapping.BootstrapClient;
-import se.kth.id2203.bootstrapping.BootstrapServer;
-import se.kth.id2203.bootstrapping.Bootstrapping;
-import se.kth.id2203.epfd.component.Epfd;
-import se.kth.id2203.epfd.component.EpfdInit;
-import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
-import se.kth.id2203.kvstore.KVEntry;
-import se.kth.id2203.kvstore.KVService;
-import se.kth.id2203.kvstore.KVServiceInit;
+import se.kth.id2203.bootstrapping.component.BootstrapClient;
+import se.kth.id2203.bootstrapping.component.BootstrapServer;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
-
-import java.util.HashMap;
 
 /**
  * Created by ralambom on 16/02/17.

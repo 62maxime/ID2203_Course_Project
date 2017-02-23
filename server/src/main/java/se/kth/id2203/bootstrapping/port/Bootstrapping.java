@@ -21,10 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.port;
 
-import java.io.Serializable;
+import se.kth.id2203.bootstrapping.event.GetInitialAssignments;
+import se.kth.id2203.bootstrapping.event.InitialAssignments;
+import se.kth.id2203.bootstrapping.event.Booted;
+import se.sics.kompics.PortType;
 
-public interface NodeAssignment extends Serializable {
+public class Bootstrapping extends PortType {
 
+    {
+        indication(GetInitialAssignments.class);
+        indication(Booted.class);
+        request(InitialAssignments.class);
+    }
 }
