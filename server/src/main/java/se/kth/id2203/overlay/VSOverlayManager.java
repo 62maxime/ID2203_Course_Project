@@ -30,15 +30,13 @@ import se.kth.id2203.bootstrapping.Booted;
 import se.kth.id2203.bootstrapping.Bootstrapping;
 import se.kth.id2203.bootstrapping.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.InitialAssignments;
+import se.kth.id2203.common.port.GroupTopology;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
-import se.kth.id2203.epfd.event.Restore;
-import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.sharedmemory.event.Topology;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
@@ -133,31 +131,13 @@ public class VSOverlayManager extends ComponentDefinition {
         }
     };
 
-    protected final Handler<Suspect> suspectHandler = new Handler<Suspect>() {
-        @Override
-        public void handle(Suspect suspect) {
-            if (booted) {
-                replicationGroup.removeNode(suspect.getSource()); // TODO change when we listen to everybody
-            }
-        }
-    };
-
-    protected final Handler<Restore> restoreHandler = new Handler<Restore>() {
-        @Override
-        public void handle(Restore restore) {
-            if (booted) {
-                replicationGroup.addNode(restore.getSource()); // TODO change when we listen to everybody
-            }
-        }
-    };
-
     private void initEpfd() {
         Integer delta = config().getValue("id2203.project.EpfdDelta", Integer.class);
         Integer period = config().getValue("id2203.project.EpfdPeriod", Integer.class);
         replicationGroup = lut.getKey(self);
         trigger(new Reset(new EpfdInit(self, delta, period)), epfd);
         trigger(new ListenTo(replicationGroup.getNodes()), epfd); // TODO listen to the whole group for BEB
-        trigger(new Message(self, self, new Topology(replicationGroup.getNodes())), net);
+        trigger(new Message(self, self, new GroupTopology(replicationGroup.getNodes())), net);
         booted = true;
     }
 
@@ -167,7 +147,5 @@ public class VSOverlayManager extends ComponentDefinition {
         subscribe(routeHandler, net);
         subscribe(localRouteHandler, route);
         subscribe(connectHandler, net);
-        subscribe(suspectHandler, epfd);
-        subscribe(restoreHandler, epfd);
     }
 }

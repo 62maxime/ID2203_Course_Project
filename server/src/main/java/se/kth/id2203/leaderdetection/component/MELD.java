@@ -2,16 +2,16 @@ package se.kth.id2203.leaderdetection.component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.common.port.GroupTopology;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.leaderdetection.event.Trust;
 import se.kth.id2203.leaderdetection.port.MonarchicalEventualLeaderDetection;
+import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
+import se.sics.kompics.*;
+import se.sics.kompics.network.Network;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,6 +27,7 @@ public class MELD extends ComponentDefinition {
     //******* Ports ******
     private final Negative<MonarchicalEventualLeaderDetection> meld = provides(MonarchicalEventualLeaderDetection.class);
     private final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
+    private final Positive<Network> net = requires(Network.class);
 
     //****** Fields ******
     private Set<NetAddress> topology;
@@ -50,9 +51,23 @@ public class MELD extends ComponentDefinition {
         }
     };
 
+    protected final ClassMatchedHandler<GroupTopology, Message> topologyMessageHandler = new ClassMatchedHandler<GroupTopology, Message>() {
+        @Override
+        public void handle(GroupTopology group, Message message) {
+            LOG.debug("Received Topology " + group.getTopology().toString());
+            topology.clear();
+            topology.addAll(group.getTopology());
+            changeLeader();
+        }
+    };
+
     private void changeLeader() {
         Set<NetAddress> remainNodes = new HashSet<>(topology);
-        remainNodes.retainAll(suspected);
+        remainNodes.removeAll(suspected);
+        LOG.debug("remainNodes {} Topology {} Suspected {}", remainNodes, topology, suspected);
+        if (remainNodes.isEmpty()) {
+            return;
+        }
         NetAddress newLeader = Collections.max(remainNodes);
         if (newLeader != leader) {
             LOG.debug("Old Leader {} New Leader {}", leader, newLeader);
@@ -71,5 +86,6 @@ public class MELD extends ComponentDefinition {
     {
         subscribe(suspectHandler, epfd);
         subscribe(restoreHandler, epfd);
+        subscribe(topologyMessageHandler, net);
     }
 }

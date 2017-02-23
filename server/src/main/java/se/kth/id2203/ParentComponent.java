@@ -15,6 +15,9 @@ import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.kvstore.KVEntry;
 import se.kth.id2203.kvstore.KVService;
 import se.kth.id2203.kvstore.KVServiceInit;
+import se.kth.id2203.leaderdetection.component.MELD;
+import se.kth.id2203.leaderdetection.component.MELDInit;
+import se.kth.id2203.leaderdetection.port.MonarchicalEventualLeaderDetection;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
@@ -44,6 +47,7 @@ public class ParentComponent
     protected final Component boot;
     protected final Component beb = create(BestEffortBroadcast.class, new BebInit(self, new HashSet<NetAddress>()));
     protected final Component riwc;
+    protected final Component meld = create(MELD.class, new MELDInit(new HashSet<NetAddress>()));
 
     {
         HashMap<Integer, KVEntry> store = new HashMap<>();
@@ -88,7 +92,29 @@ public class ParentComponent
         connect(net, riwc.getNegative(Network.class), Channel.TWO_WAY);
         // BEB
         connect(net, beb.getNegative(Network.class), Channel.TWO_WAY);
+        // MELD
+        connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
+                meld.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
+        connect(net, meld.getNegative(Network.class), Channel.TWO_WAY);
 
 
+
+    }
+
+    Handler<Kill> killHandler = new Handler<Kill>() {
+        @Override
+        public void handle(Kill kill) {
+            LOG.debug("Killed");
+            destroy(overlay);
+            destroy(kv);
+            destroy(epfd);
+            destroy(boot);
+            destroy(beb);
+            destroy(riwc);
+        }
+    };
+
+    {
+        subscribe(killHandler, control);
     }
 }
