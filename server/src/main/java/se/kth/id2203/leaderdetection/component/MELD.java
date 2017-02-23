@@ -53,6 +53,9 @@ public class MELD extends ComponentDefinition {
     private void changeLeader() {
         Set<NetAddress> remainNodes = new HashSet<>(topology);
         remainNodes.retainAll(suspected);
+        if (remainNodes.isEmpty()) {
+            return;
+        }
         NetAddress newLeader = Collections.max(remainNodes);
         if (newLeader != leader) {
             LOG.debug("Old Leader {} New Leader {}", leader, newLeader);
