@@ -341,6 +341,36 @@ public abstract class ScenarioGen {
             }
         };
     }
+    public static SimulationScenario failedWrite(final int servers) {
+        return new SimulationScenario() {
+            {
+                StochasticProcess startCluster = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(servers, startServerOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                StochasticProcess startWrite1 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startClientOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+                StochasticProcess startRead1 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(2),
+                                new BasicIntSequentialDistribution(2), new BasicIntSequentialDistribution(2));
+                    }
+                };
+                startCluster.start();
+                startWrite1.startAfterTerminationOf(20000, startCluster);
+                startRead1.startAfterTerminationOf(2000, startWrite1);
+                terminateAfterTerminationOf(1000, startRead1);
+            }
+        };
+    }
 
 
 }

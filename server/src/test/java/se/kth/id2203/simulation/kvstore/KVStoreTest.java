@@ -100,6 +100,17 @@ public class KVStoreTest {
         Assert.assertEquals(new Integer(2), res.get("client3", Integer.class));
     }
 
+    @Test
+    public void failedWrite() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.failedWrite(6);
+        res.put("testNum", 5);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Integer res1 = res.get("client2", Integer.class);
+        Assert.assertTrue((res1 == null) || (res1 == 2));
+    }
+
 
 
 }

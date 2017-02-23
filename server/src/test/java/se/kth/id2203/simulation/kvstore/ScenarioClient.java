@@ -57,17 +57,32 @@ public class ScenarioClient extends ComponentDefinition {
         @Override
         public void handle(Start event) {
             int testNum = res.get("testNum", Integer.class);
-            if (testNum == 1) {
-                // only read operations
-                test1();
-            } else if (testNum == 2) {
-                // Write -> Read -> Write -> Read
-                test2();
-            } else if (testNum == 3) {
-                test3();
-            } else if (testNum == 4) {
-                test4();
+            switch (testNum){
+                case 1:
+                    test1();
+                    break;
+                case  2:
+                    test2();
+                    break;
+                case 3:
+                    test3();
+                    break;
+                case 4:
+                    test4();
+                    break;
+                case 5:
+                    test5();
+                    break;
+                default:
             }
+
+        }
+    };
+
+    Handler<Kill> killHandler = new Handler<Kill>() {
+        @Override
+        public void handle(Kill kill) {
+            LOG.debug("Killed");
 
         }
     };
@@ -96,7 +111,7 @@ public class ScenarioClient extends ComponentDefinition {
                     res.put(key, "NOT_FOUND");
                 } else {
                     int testNum = res.get("testNum", Integer.class);
-                    if (testNum == 2 || testNum == 4) {
+                    if (testNum == 2 || testNum == 4  || testNum == 5) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, content.getValue().getValue());
                     } else if (testNum == 3) {
@@ -197,10 +212,24 @@ public class ScenarioClient extends ComponentDefinition {
         }
     }
 
+    private void test5() {
+        int client = config().getValue("id2203.project.client", Integer.class);
+        if (client == 1) {
+            sendPut("write", 2);
+            res.put("client" + 2, "PUT");
+            suicide();
+        } else {
+            sendGet("write");
+            res.put("client" + client, "GET");
+        }
+    }
+
+
     {
         subscribe(startHandler, control);
         subscribe(responseHandler, net);
         subscribe(getResponseHandler, net);
         subscribe(putResponseHandler, net);
+        subscribe(killHandler, control);
     }
 }
