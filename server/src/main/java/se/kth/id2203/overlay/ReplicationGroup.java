@@ -11,11 +11,13 @@ public class ReplicationGroup {
     private Integer lowerBound;
     private Integer upperBound;
     private NavigableSet<NetAddress> nodes;
+    private int size;
 
     public ReplicationGroup(Integer lowerBound, Integer upperBound, NavigableSet<NetAddress> netAddresses) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.nodes = netAddresses;
+        this.size = netAddresses.size();
     }
 
     public boolean between(Integer key) {
@@ -38,5 +40,9 @@ public class ReplicationGroup {
 
     public NavigableSet<NetAddress> getNodes() {
         return nodes;
+    }
+
+    public int getSize() {
+        return size;
     }
 }
