@@ -82,6 +82,9 @@ public abstract class ScenarioGen {
                 @Override
                 public Map<String, Object> initConfigUpdate() {
                     HashMap<String, Object> config = new HashMap<>();
+                    config.put("id2203.project.bootThreshold", 6);
+                    config.put("id2203.project.partitionGroupNumber", 2);
+                    config.put("id2203.project.replicationDelta", 3);
                     config.put("id2203.project.address", selfAdr);
                     if (self != 1) { // don't put this at the bootstrap server, or it will act as a bootstrap client
                         config.put("id2203.project.bootstrap-address", bsAdr);
