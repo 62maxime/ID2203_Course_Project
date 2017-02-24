@@ -38,6 +38,7 @@ public class MELD extends ComponentDefinition {
     Handler<Suspect> suspectHandler = new Handler<Suspect>() {
         @Override
         public void handle(Suspect suspect) {
+            LOG.debug("Suspected " + suspect.getSource());
             suspected.add(suspect.getSource());
             changeLeader();
         }
@@ -46,6 +47,7 @@ public class MELD extends ComponentDefinition {
     Handler<Restore> restoreHandler = new Handler<Restore>() {
         @Override
         public void handle(Restore restore) {
+            LOG.debug("Restore " + restore.getSource());
             suspected.remove(restore.getSource());
             changeLeader();
         }
@@ -69,7 +71,7 @@ public class MELD extends ComponentDefinition {
             return;
         }
         NetAddress newLeader = Collections.max(remainNodes);
-        if (newLeader != leader) {
+        if (!newLeader.equals(leader)) {
             LOG.debug("Old Leader {} New Leader {}", leader, newLeader);
             leader = newLeader;
             trigger(new Trust(newLeader), meld);
