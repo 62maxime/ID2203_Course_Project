@@ -90,4 +90,8 @@ public class NetAddress implements Serializable, Address, Comparable<NetAddress>
                 .compare(this.isa.getPort(), that.isa.getPort())
                 .result();
     }
+
+    public int getRank() {
+        return  Integer.parseInt(String.valueOf(isa.getAddress().getAddress()[3]));
+    }
 }

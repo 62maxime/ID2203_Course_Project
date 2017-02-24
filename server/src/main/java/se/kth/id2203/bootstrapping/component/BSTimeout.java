@@ -21,15 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.component;
 
-import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.timer.SchedulePeriodicTimeout;
+import se.sics.kompics.timer.Timeout;
 
-public class Booted implements KompicsEvent {
+/**
+ * @author Lars Kroll <lkroll@kth.se>
+ */
+public class BSTimeout extends Timeout {
 
-    public final NodeAssignment assignment;
-
-    public Booted(final NodeAssignment assignment) {
-        this.assignment = assignment;
+    BSTimeout(SchedulePeriodicTimeout spt) {
+        super(spt);
     }
 }

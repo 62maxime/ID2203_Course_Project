@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.simulation;
+package se.kth.id2203.simulation.kvstore;
 
 import junit.framework.Assert;
 import org.junit.Test;
@@ -30,11 +30,12 @@ import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.run.LauncherComp;
 
 import java.util.HashMap;
+import java.util.StringTokenizer;
 
 /**
  * @author Lars Kroll <lkroll@kth.se>
  */
-public class OpsTest {
+public class KVStoreTest {
 
     private static final int NUM_MESSAGES_OK = 3;
     private static final int NUM_MESSAGES_NOT_FOUND = 7;
@@ -42,6 +43,7 @@ public class OpsTest {
 
     @Test
     public void simpleOpsTest() {
+        // Initialization of the store
         HashMap<Integer, KVEntry> store = new HashMap<>();
         store.put("test0".hashCode(), new KVEntry("test0".hashCode(), 41));
         store.put("test1".hashCode(), new KVEntry("test1".hashCode(), 40));
@@ -49,7 +51,7 @@ public class OpsTest {
 
         long seed = 123;
         SimulationScenario.setSeed(seed);
-        SimulationScenario simpleBootScenario = ScenarioGen.simpleOps(6);
+        SimulationScenario simpleBootScenario = ScenarioGen.oneClient(6);
         res.put("messages", NUM_MESSAGES_OK + NUM_MESSAGES_NOT_FOUND);
         res.put("testNum", 1);
         simpleBootScenario.simulate(LauncherComp.class);
@@ -63,6 +65,64 @@ public class OpsTest {
             Assert.assertEquals("NOT_FOUND", res.get(k, String.class));
         }
     }
+
+
+    @Test
+    public void twoWritesAndRead() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.twoClientsSameOperation(6);
+        res.put("testNum", 2);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Assert.assertEquals(new Integer(1), res.get("client1", Integer.class));
+        Assert.assertEquals(new Integer(2), res.get("client2", Integer.class));
+    }
+
+    @Test
+    public void twoWritesAndReadDifferentClient() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.twoClientsAlternate(6);
+        res.put("testNum", 3);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Assert.assertEquals(new Integer(2), res.get("client1", Integer.class));
+        Assert.assertEquals(new Integer(1), res.get("client2", Integer.class));
+    }
+
+    @Test
+    public void concurrentOperation() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.threeClientsConcurrentOperation(6);
+        res.put("testNum", 4);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Object res1 = res.get("client2", Object.class);
+        System.out.println(res1);
+        if (res1 instanceof String) {
+            if (res1.equals("NOT_FOUND")) {
+                res1 = null;
+            }
+        }
+        Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
+        Assert.assertEquals(new Integer(2), res.get("client3", Integer.class));
+    }
+
+    @Test
+    public void failedWrite() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.failedWrite(6);
+        res.put("testNum", 5);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Object res1 = res.get("client2", Object.class);
+        if (res1 instanceof String) {
+            if (res1.equals("NOT_FOUND")) {
+                res1 = null;
+            }
+        }
+        Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
+    }
+
 
 
 }

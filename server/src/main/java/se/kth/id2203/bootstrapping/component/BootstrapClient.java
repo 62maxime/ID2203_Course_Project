@@ -21,9 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.component;
 
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.bootstrapping.event.Boot;
+import se.kth.id2203.bootstrapping.event.Booted;
+import se.kth.id2203.bootstrapping.event.CheckIn;
+import se.kth.id2203.bootstrapping.event.Ready;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
@@ -114,7 +119,7 @@ public class BootstrapClient extends ComponentDefinition {
         public void handle(Suspect suspect) {
             // Bootstrap server is suspected to be dead => suicide
             LOG.debug("Bootstrap server" + server.toString() + " is suspected.");
-            trigger(new Reset(new EpfdInit(self, 1000,4000 )), epfd);
+            trigger(new Reset(new EpfdInit(self, 1000, 4000)), epfd);
             suicide();
         }
     };

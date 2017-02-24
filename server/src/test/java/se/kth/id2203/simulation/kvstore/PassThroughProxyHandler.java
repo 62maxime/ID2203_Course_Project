@@ -21,17 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.simulation.kvstore;
 
-import se.sics.kompics.KompicsEvent;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 
-import java.io.Serializable;
+/**
+ * Freely adapted from <http://surguy.net/articles/communication-across-classloaders.xml>.
+ * 
+ * @author Lars Kroll <lkroll@kth.se>
+ */
+class PassThroughProxyHandler implements InvocationHandler {
 
-public class CheckIn implements KompicsEvent, Serializable {
+    private final Object delegate;
 
-    public final static CheckIn event = new CheckIn();
-    private static final long serialVersionUID = -5044901955690784224L;
+    public PassThroughProxyHandler(Object delegate) {
+        this.delegate = delegate;
+    }
 
-    private CheckIn() {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Method delegateMethod = delegate.getClass().getMethod(method.getName(), method.getParameterTypes());
+        return delegateMethod.invoke(delegate, args);
     }
 }

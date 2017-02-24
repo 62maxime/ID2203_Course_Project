@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * Created by ralambom on 11/02/17.
  */
-public class HeartbeatReply extends NetMessage implements Serializable{
+public class HeartbeatReply extends NetMessage implements Serializable {
 
     private static final long serialVersionUID = -4714284515301056909L;
     private int seqnum;

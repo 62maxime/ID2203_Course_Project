@@ -21,51 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.kvstore;
+package se.kth.id2203.bootstrapping.event;
 
-import com.google.common.base.MoreObjects;
-import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
 
 import java.io.Serializable;
-import java.util.UUID;
 
-/**
- * @author Lars Kroll <lkroll@kth.se>
- */
-public class Operation implements KompicsEvent, Serializable {
+public class Boot implements KompicsEvent, Serializable {
 
-    private static final long serialVersionUID = 2525600659083087179L;
+    private static final long serialVersionUID = -4700507659951599133L;
 
-    public final String key;
-    public final UUID id;
-    private NetAddress source;
+    public final NodeAssignment assignment;
 
-    public Operation(String key) {
-        this.key = key;
-        this.id = UUID.randomUUID();
-    }
-
-    public Operation(String key, NetAddress source) {
-        this.key = key;
-        this.id = UUID.randomUUID();
-        this.source = source;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("key", key)
-                .toString();
-    }
-
-    public void setSource(NetAddress source) {
-        this.source = source;
-    }
-
-    public NetAddress getSource() {
-
-        return source;
+    public Boot(NodeAssignment assignment) {
+        this.assignment = assignment;
     }
 }

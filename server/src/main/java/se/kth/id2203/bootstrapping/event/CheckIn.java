@@ -21,17 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.event;
 
-import com.google.common.collect.ImmutableSet;
-import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
 
-public class GetInitialAssignments implements KompicsEvent {
+import java.io.Serializable;
 
-    public final ImmutableSet<NetAddress> nodes;
+public class CheckIn implements KompicsEvent, Serializable {
 
-    public GetInitialAssignments(final ImmutableSet<NetAddress> nodes) {
-        this.nodes = nodes;
+    public final static CheckIn event = new CheckIn();
+    private static final long serialVersionUID = -5044901955690784224L;
+
+    private CheckIn() {
     }
 }

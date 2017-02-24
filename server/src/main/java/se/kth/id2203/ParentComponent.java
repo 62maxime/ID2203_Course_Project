@@ -5,22 +5,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.component.BebInit;
 import se.kth.id2203.beb.component.BestEffortBroadcast;
-import se.kth.id2203.beb.port.BebPort;
-import se.kth.id2203.bootstrapping.BootstrapClient;
-import se.kth.id2203.bootstrapping.BootstrapServer;
-import se.kth.id2203.bootstrapping.Bootstrapping;
+import se.kth.id2203.bootstrapping.component.BootstrapClient;
+import se.kth.id2203.bootstrapping.component.BootstrapServer;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
 import se.kth.id2203.epfd.component.Epfd;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.kvstore.KVEntry;
 import se.kth.id2203.kvstore.KVService;
 import se.kth.id2203.kvstore.KVServiceInit;
+import se.kth.id2203.leaderdetection.component.MELD;
+import se.kth.id2203.leaderdetection.component.MELDInit;
+import se.kth.id2203.leaderdetection.port.MonarchicalEventualLeaderDetection;
+import se.kth.id2203.multipaxos.component.MultiPaxos;
+import se.kth.id2203.multipaxos.component.MultiPaxosInit;
+import se.kth.id2203.multipaxos.port.AscPort;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
 import se.kth.id2203.overlay.VSOverlayManager;
-import se.kth.id2203.sharedmemory.component.RIWC;
-import se.kth.id2203.sharedmemory.component.RIWCInit;
-import se.kth.id2203.sharedmemory.port.ReadImposeWriteConsult;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
@@ -39,11 +41,12 @@ public class ParentComponent
     protected final Positive<Timer> timer = requires(Timer.class);
     //******* Children ******
     protected final Component overlay = create(VSOverlayManager.class, Init.NONE);
-    protected final Component kv = create(KVService.class, new KVServiceInit());
+    protected final Component kv;
     protected final Component epfd;
     protected final Component boot;
     protected final Component beb = create(BestEffortBroadcast.class, new BebInit(self, new HashSet<NetAddress>()));
-    protected final Component riwc;
+    protected final Component meld = create(MELD.class, new MELDInit(new HashSet<NetAddress>()));
+    protected final Component asc = create(MultiPaxos.class, new MultiPaxosInit(self, self.hashCode()));
 
     {
         HashMap<Integer, KVEntry> store = new HashMap<>();
@@ -52,7 +55,7 @@ public class ParentComponent
         store.put("test0".hashCode(), new KVEntry("test0".hashCode(), 41));
         store.put("test1".hashCode(), new KVEntry("test1".hashCode(), 40));
         store.put("test2".hashCode(), new KVEntry("test2".hashCode(), 39));
-        riwc = create(RIWC.class, new RIWCInit(self, 1, self.hashCode(), store));
+        kv = create(KVService.class, new KVServiceInit(store));
 
         LOG.debug("IP {} Port {}", self.getIp(), self.getPort());
         Integer delta = config().getValue("id2203.project.EpfdDelta", Integer.class);
@@ -81,14 +84,34 @@ public class ParentComponent
                 overlay.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
         connect(net, epfd.getNegative(Network.class), Channel.TWO_WAY);
         connect(timer, epfd.getNegative(Timer.class), Channel.TWO_WAY);
-        // RIWC
-        connect(riwc.getPositive(ReadImposeWriteConsult.class), kv.getNegative(ReadImposeWriteConsult.class),
-                Channel.TWO_WAY);
-        connect(beb.getPositive(BebPort.class), riwc.getNegative(BebPort.class), Channel.TWO_WAY);
-        connect(net, riwc.getNegative(Network.class), Channel.TWO_WAY);
         // BEB
         connect(net, beb.getNegative(Network.class), Channel.TWO_WAY);
+        // MELD
+        connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
+                meld.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);
+        connect(net, meld.getNegative(Network.class), Channel.TWO_WAY);
+        connect(meld.getPositive(MonarchicalEventualLeaderDetection.class),
+                kv.getNegative(MonarchicalEventualLeaderDetection.class), Channel.TWO_WAY);
+        //ASC
+        connect(net, asc.getNegative(Network.class), Channel.TWO_WAY);
+        connect(asc.getPositive(AscPort.class), kv.getNegative(AscPort.class), Channel.TWO_WAY);
 
 
+    }
+
+    Handler<Kill> killHandler = new Handler<Kill>() {
+        @Override
+        public void handle(Kill kill) {
+            LOG.debug("Killed");
+            destroy(overlay);
+            destroy(kv);
+            destroy(epfd);
+            destroy(boot);
+            destroy(beb);
+        }
+    };
+
+    {
+        subscribe(killHandler, control);
     }
 }

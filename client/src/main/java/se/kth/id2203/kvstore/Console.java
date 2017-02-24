@@ -160,6 +160,41 @@ public class Console implements Runnable {
                 return "Put the value in the key-value store";
             }
         });
+        commands.put("cas", new Command() {
+            @Override
+            public boolean execute(String[] cmdline, ClientService worker) {
+                if (cmdline.length == 4) {
+                    Future<OpResponse> fr = worker.cas(cmdline[1], cmdline[2], cmdline[3]);
+                    out.println("Operation sent! Awaiting response...");
+                    try {
+                        OpResponse response = fr.get();
+                        if (response instanceof CasResponse) {
+                            CasResponse r = (CasResponse) response;
+                            out.println("Operation complete! Success: " + r.isSuccess());
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (InterruptedException | ExecutionException ex) {
+                        ex.printStackTrace(out);
+                        return false;
+                    }
+
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String usage() {
+                return "cas <key> <oldValue> <newValue>";
+            }
+
+            @Override
+            public String help() {
+                return "Compare-And-Swap";
+            }
+        });
         commands.put("help", new Command() {
 
             @Override
@@ -250,7 +285,7 @@ public class Console implements Runnable {
                 if (line.isEmpty()) {
                     continue;
                 }
-                String[] cmdline = line.split(" ", 3);
+                String[] cmdline = line.split(" ", 4);
                 String cmd = cmdline[0];
                 Command c = commands.get(cmd);
                 if (c == null) {

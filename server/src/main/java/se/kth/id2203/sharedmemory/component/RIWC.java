@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.port.BebPort;
+import se.kth.id2203.common.port.GroupTopology;
 import se.kth.id2203.kvstore.KVEntry;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
@@ -155,11 +156,11 @@ public class RIWC extends ComponentDefinition {
             }
         }
     };
-    protected final ClassMatchedHandler<Topology, Message> topologyMessageHandler = new ClassMatchedHandler<Topology, Message>() {
+    protected final ClassMatchedHandler<GroupTopology, Message> topologyMessageHandler = new ClassMatchedHandler<GroupTopology, Message>() {
         @Override
-        public void handle(Topology topology, Message message) {
-            LOG.debug("Received Topology " + topology.getNetAddresses().toString());
-            n = topology.getNetAddresses().size();
+        public void handle(GroupTopology topology, Message message) {
+            LOG.debug("Received Topology " + topology.getTopology().toString());
+            n = topology.getTopology().getSize();
         }
     };
 

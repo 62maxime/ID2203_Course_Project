@@ -6,7 +6,7 @@ import se.sics.kompics.KompicsEvent;
 /**
  * Created by ralambom on 12/02/17.
  */
-public class Restore implements KompicsEvent{
+public class Restore implements KompicsEvent {
 
     private final NetAddress source;
 

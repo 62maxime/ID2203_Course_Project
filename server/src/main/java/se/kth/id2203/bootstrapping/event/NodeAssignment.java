@@ -21,15 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.bootstrapping.event;
 
-import se.sics.kompics.KompicsEvent;
+import java.io.Serializable;
 
-public class InitialAssignments implements KompicsEvent {
+public interface NodeAssignment extends Serializable {
 
-    public final NodeAssignment assignment;
-
-    public InitialAssignments(final NodeAssignment assignment) {
-        this.assignment = assignment;
-    }
 }

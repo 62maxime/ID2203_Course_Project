@@ -147,6 +147,19 @@ public class ClientService extends ComponentDefinition {
             }
         }
     };
+    protected final ClassMatchedHandler<CasResponse, Message> casResponseHandler = new ClassMatchedHandler<CasResponse, Message>() {
+
+        @Override
+        public void handle(CasResponse content, Message context) {
+            LOG.debug("Got OpResponse: {}", content);
+            SettableFuture<OpResponse> sf = pending.remove(content.id);
+            if (sf != null) {
+                sf.set(content);
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+        }
+    };
 
     {
         subscribe(startHandler, control);
@@ -156,6 +169,7 @@ public class ClientService extends ComponentDefinition {
         subscribe(responseHandler, net);
         subscribe(getResponseHandler, net);
         subscribe(putResponseHandler, net);
+        subscribe(casResponseHandler, net);
     }
 
     Future<OpResponse> op(String key) {
@@ -166,14 +180,22 @@ public class ClientService extends ComponentDefinition {
     }
 
     Future<OpResponse> get(String key) {
-        GetRequest op = new GetRequest(key);
+        GetRequest op = new GetRequest(key, self);
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;
     }
 
     Future<OpResponse> put(String key, String value) {
-        PutRequest op = new PutRequest(key, new KVEntry(key.hashCode(), Integer.parseInt(value)));
+        PutRequest op = new PutRequest(key, self, new KVEntry(key.hashCode(), Integer.parseInt(value)));
+        OpWithFuture owf = new OpWithFuture(op);
+        trigger(owf, onSelf);
+        return owf.f;
+    }
+
+    Future<OpResponse> cas(String key, String oldValue, String newValue) {
+        CasRequest op = new CasRequest(key, self, new KVEntry(key.hashCode(), Integer.parseInt(oldValue)),
+                new KVEntry( key.hashCode(), Integer.parseInt(newValue)));
         OpWithFuture owf = new OpWithFuture(op);
         trigger(owf, onSelf);
         return owf.f;

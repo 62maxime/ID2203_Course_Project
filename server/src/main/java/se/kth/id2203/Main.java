@@ -23,15 +23,7 @@
  */
 package se.kth.id2203;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.UUID;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.networking.NetAddressConverter;
 import se.sics.kompics.Kompics;
@@ -40,14 +32,17 @@ import se.sics.kompics.config.ConfigUpdate;
 import se.sics.kompics.config.Conversions;
 import se.sics.kompics.config.ValueMerger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.UUID;
+
 /**
- *
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class Main {
 
     static final NetAddressConverter NAC = new NetAddressConverter();
-    
+
     static {
         // conversions
         Conversions.register(NAC);

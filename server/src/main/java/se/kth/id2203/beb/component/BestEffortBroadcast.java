@@ -6,10 +6,9 @@ import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.event.BebTopology;
 import se.kth.id2203.beb.port.BebPort;
+import se.kth.id2203.common.port.GroupTopology;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
-import se.kth.id2203.overlay.Connect;
-import se.kth.id2203.sharedmemory.event.Topology;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 
@@ -49,12 +48,12 @@ public class BestEffortBroadcast extends ComponentDefinition {
             LOG.info("[BebBroadcast] BebDeliver delivered by " + self.toString());
         }
     };
-    protected final ClassMatchedHandler<Topology,Message> topologyMessageHandler = new ClassMatchedHandler<Topology, Message>() {
+    protected final ClassMatchedHandler<GroupTopology, Message> topologyMessageHandler = new ClassMatchedHandler<GroupTopology, Message>() {
         @Override
-        public void handle(Topology topo, Message message) {
-            LOG.debug("Received Topology " + topo.getNetAddresses().toString());
+        public void handle(GroupTopology topo, Message message) {
+            LOG.debug("Received Topology " + topo.getTopology().toString());
             topology.clear();
-            topology.addAll(topo.getNetAddresses());
+            topology.addAll(topo.getTopology().getNodes());
         }
     };
 

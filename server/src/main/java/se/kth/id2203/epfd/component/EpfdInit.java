@@ -3,9 +3,6 @@ package se.kth.id2203.epfd.component;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.Init;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Created by ralambom on 11/02/17.
  */

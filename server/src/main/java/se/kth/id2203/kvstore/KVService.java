@@ -26,13 +26,15 @@ package se.kth.id2203.kvstore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.kvstore.OpResponse.Code;
+import se.kth.id2203.leaderdetection.event.Trust;
+import se.kth.id2203.leaderdetection.port.MonarchicalEventualLeaderDetection;
+import se.kth.id2203.multipaxos.event.AscAbort;
+import se.kth.id2203.multipaxos.event.AscDecide;
+import se.kth.id2203.multipaxos.event.AscPropose;
+import se.kth.id2203.multipaxos.port.AscPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
-import se.kth.id2203.sharedmemory.event.AR_Read_Request;
-import se.kth.id2203.sharedmemory.event.AR_Read_Response;
-import se.kth.id2203.sharedmemory.event.AR_Write_Request;
-import se.kth.id2203.sharedmemory.event.AR_Write_Response;
 import se.kth.id2203.sharedmemory.port.ReadImposeWriteConsult;
 import se.sics.kompics.ClassMatchedHandler;
 import se.sics.kompics.ComponentDefinition;
@@ -40,7 +42,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
@@ -53,14 +55,17 @@ public class KVService extends ComponentDefinition {
     protected final Positive<Network> net = requires(Network.class);
     protected final Positive<Routing> route = requires(Routing.class);
     protected final Positive<ReadImposeWriteConsult> riwc = requires(ReadImposeWriteConsult.class);
+    protected final Positive<MonarchicalEventualLeaderDetection> meld =
+            requires(MonarchicalEventualLeaderDetection.class);
+    protected final Positive<AscPort> asc = requires(AscPort.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
-    private LinkedList<Message> pending;
-    private boolean busy = false;
+    private NetAddress leader = null;
+    private HashMap<Integer, KVEntry> store;
 
     //******* Constructor ******
     public KVService(KVServiceInit init) {
-        this.pending = new LinkedList<>();
+        this.store = new HashMap<>(init.getStore());
     }
 
     //******* Handlers ******
@@ -74,20 +79,22 @@ public class KVService extends ComponentDefinition {
         }
 
     };
+    private void proposeOperation(Operation content) {
+        LOG.debug("Got {}", content);
+        if (leader.equals(self)) {
+            LOG.debug("{} is the leader, propose {}", self, content);
+            trigger(new AscPropose(content), asc);
+        } else {
+            LOG.debug("{} is not the leader, forward {}", self, content);
+            trigger(new Message(self, leader, content), net);
+        }
+    }
 
     protected final ClassMatchedHandler<GetRequest, Message> getHandler = new ClassMatchedHandler<GetRequest, Message>() {
 
         @Override
         public void handle(GetRequest content, Message context) {
-            if (!busy) {
-                busy = true;
-                LOG.info("Got operation {}!", content);
-                trigger(new AR_Read_Request(content.id, content.key.hashCode()), riwc);
-                pending.addFirst(context);
-            } else {
-                LOG.info("Got operation -> Pending {}", content.id);
-                pending.addLast(context);
-            }
+            proposeOperation(content);
         }
 
     };
@@ -95,75 +102,102 @@ public class KVService extends ComponentDefinition {
 
         @Override
         public void handle(PutRequest content, Message context) {
-            if (!busy) {
-                busy = true;
-                LOG.info("Got operation {}!", content);
-                trigger(new AR_Write_Request(content.id, content.key.hashCode(), content.getValue()), riwc);
-                pending.addFirst(context);
-            } else {
-                LOG.info("Got operation -> Pending {}", content.id);
-                pending.addLast(context);
-            }
-
+            proposeOperation(content);
         }
 
     };
-    protected final Handler<AR_Read_Response> ar_read_responseHandler = new Handler<AR_Read_Response>() {
+    protected final ClassMatchedHandler<CasRequest, Message> casHandler = new ClassMatchedHandler<CasRequest, Message>() {
+
         @Override
-        public void handle(AR_Read_Response ar_read_response) {
-            LOG.debug("AR_Read_Response " + ar_read_response.getValue());
-            UUID uuid = ar_read_response.getUuid();
-            NetAddress address = pending.removeFirst().getSource();
-            KVEntry value = ar_read_response.getValue();
+        public void handle(CasRequest content, Message context) {
+            proposeOperation(content);
+        }
+
+    };
+    protected final Handler<Trust> trustHandler = new Handler<Trust>() {
+        @Override
+        public void handle(Trust trust) {
+            leader = trust.getLeader();
+            LOG.debug("From {}, Got a new leader {}", self, leader);
+        }
+    };
+    protected final ClassMatchedHandler<GetRequest, AscDecide> getRequestClassMatchedHandler = new ClassMatchedHandler<GetRequest, AscDecide>() {
+        @Override
+        public void handle(GetRequest getRequest, AscDecide ascDecide) {
+            LOG.debug("Decide {}", getRequest);
+            Integer key = getRequest.key.hashCode();
+            UUID uuid = getRequest.id;
+            KVEntry value = store.get(key);
+            NetAddress address = getRequest.getSource();
+            LOG.debug("Result {} {} {}", uuid, value, address);
+            if (address == null || !(leader.equals(self))) {
+                return;
+            }
+
             if (value == null) {
                 trigger(new Message(self, address, new GetResponse(uuid, Code.NOT_FOUND, value)), net);
             } else {
                 trigger(new Message(self, address, new GetResponse(uuid, Code.OK, value)), net);
             }
-            nextTask();
         }
     };
-    protected final Handler<AR_Write_Response> ar_write_responseHandler = new Handler<AR_Write_Response>() {
+    protected final ClassMatchedHandler<PutRequest, AscDecide> putRequestClassMatchedHandler = new ClassMatchedHandler<PutRequest, AscDecide>() {
         @Override
-        public void handle(AR_Write_Response ar_write_response) {
-            LOG.debug("AR_Write_Response ");
-            UUID uuid = ar_write_response.getUuid();
-            NetAddress address = pending.removeFirst().getSource();
-            trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
-            nextTask();
-
+        public void handle(PutRequest putRequest, AscDecide ascDecide) {
+            LOG.debug("Decide {}", putRequest);
+            Integer key = putRequest.key.hashCode();
+            UUID uuid = putRequest.id;
+            NetAddress address = putRequest.getSource();
+            if (address == null) {
+                return;
+            }
+            store.put(key, putRequest.getValue());
+            if (leader.equals(self)) {
+                trigger(new Message(self, address, new PutResponse(uuid, Code.OK)), net);
+            }
+        }
+    };
+    protected final ClassMatchedHandler<CasRequest, AscDecide> casRequestClassMatchedHandler = new ClassMatchedHandler<CasRequest, AscDecide>() {
+        @Override
+        public void handle(CasRequest casRequest, AscDecide ascDecide) {
+            LOG.debug("Decide {}", casRequest);
+            Integer key = casRequest.key.hashCode();
+            UUID uuid = casRequest.id;
+            NetAddress address = casRequest.getSource();
+            if (address == null) {
+                return;
+            }
+            KVEntry value = store.get(key);
+            boolean success = false;
+            if (value.getValue().equals(casRequest.getOldValue().getValue())) {
+                store.put(key, casRequest.getNewValue());
+                success = true;
+            }
+            if (leader.equals(self)) {
+                trigger(new Message(self, address, new CasResponse(uuid, Code.OK, success)), net);
+            }
         }
     };
 
-    /**
-     * Ensure that only one operation is done per process
-     */
-    private final void nextTask() {
-        busy = false;
-        if (pending.isEmpty()) {
-            return;
+    protected final Handler<AscAbort> abortHandler = new Handler<AscAbort>() {
+        @Override
+        public void handle(AscAbort ascAbort) {
+            // TODO
+            LOG.debug("Abort {}", ascAbort.getOperation());
         }
-        Message message = pending.removeFirst();
-        Object o = message.extractPattern().cast(message.extractValue());
-        if (o instanceof GetRequest) {
-            LOG.info("Pending -> GetRequest");
-            getHandler.handle((GetRequest) o, message);
-        } else if (o instanceof PutRequest) {
-            LOG.info("Pending -> PutRequest");
-            putHandler.handle((PutRequest) o, message);
-        } else {
-            LOG.info("Pending -> None");
-        }
-
-    }
+    };
 
 
     {
         subscribe(opHandler, net);
         subscribe(getHandler, net);
         subscribe(putHandler, net);
-        subscribe(ar_read_responseHandler, riwc);
-        subscribe(ar_write_responseHandler, riwc);
+        subscribe(casHandler, net);
+        subscribe(trustHandler, meld);
+        subscribe(getRequestClassMatchedHandler, asc);
+        subscribe(putRequestClassMatchedHandler, asc);
+        subscribe(casRequestClassMatchedHandler, asc);
+        subscribe(abortHandler, asc);
     }
 
 }

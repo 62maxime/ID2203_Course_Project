@@ -21,19 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.bootstrapping;
+package se.kth.id2203.simulation.kvstore;
 
-import se.sics.kompics.KompicsEvent;
-
-import java.io.Serializable;
-
-public class Boot implements KompicsEvent, Serializable {
-
-    private static final long serialVersionUID = -4700507659951599133L;
-
-    public final NodeAssignment assignment;
-
-    public Boot(NodeAssignment assignment) {
-        this.assignment = assignment;
-    }
+public interface SimulationResultMap {
+    public void put(String key, Object o);
+    public <T> T get(String key, Class<T> tpe);
 }

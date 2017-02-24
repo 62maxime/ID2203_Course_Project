@@ -1,13 +1,12 @@
 package se.kth.id2203.simulation.group;
 
-import com.google.common.collect.TreeMultimap;
 import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.bootstrapping.Booted;
-import se.kth.id2203.bootstrapping.Bootstrapping;
-import se.kth.id2203.bootstrapping.GetInitialAssignments;
-import se.kth.id2203.bootstrapping.InitialAssignments;
+import se.kth.id2203.bootstrapping.event.Booted;
+import se.kth.id2203.bootstrapping.port.Bootstrapping;
+import se.kth.id2203.bootstrapping.event.GetInitialAssignments;
+import se.kth.id2203.bootstrapping.event.InitialAssignments;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
@@ -16,7 +15,6 @@ import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

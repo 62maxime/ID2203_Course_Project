@@ -21,51 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.kvstore;
+package se.kth.id2203.bootstrapping.event;
 
-import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
 
-import java.io.Serializable;
-import java.util.UUID;
+public class GetInitialAssignments implements KompicsEvent {
 
-/**
- * @author Lars Kroll <lkroll@kth.se>
- */
-public class Operation implements KompicsEvent, Serializable {
+    public final ImmutableSet<NetAddress> nodes;
 
-    private static final long serialVersionUID = 2525600659083087179L;
-
-    public final String key;
-    public final UUID id;
-    private NetAddress source;
-
-    public Operation(String key) {
-        this.key = key;
-        this.id = UUID.randomUUID();
-    }
-
-    public Operation(String key, NetAddress source) {
-        this.key = key;
-        this.id = UUID.randomUUID();
-        this.source = source;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("key", key)
-                .toString();
-    }
-
-    public void setSource(NetAddress source) {
-        this.source = source;
-    }
-
-    public NetAddress getSource() {
-
-        return source;
+    public GetInitialAssignments(final ImmutableSet<NetAddress> nodes) {
+        this.nodes = nodes;
     }
 }
