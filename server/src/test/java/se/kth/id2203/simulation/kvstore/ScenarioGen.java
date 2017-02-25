@@ -372,5 +372,29 @@ public abstract class ScenarioGen {
         };
     }
 
+    public static SimulationScenario simpleCas(final int servers) {
+        return new SimulationScenario() {
+            {
+                StochasticProcess startCluster = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(servers, startServerOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                StochasticProcess casAndRead = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startClientOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                startCluster.start();
+                casAndRead.startAfterTerminationOf(20000, startCluster);
+                terminateAfterTerminationOf(1000, casAndRead);
+            }
+        };
+    }
+
 
 }

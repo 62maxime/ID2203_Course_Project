@@ -41,6 +41,12 @@ public class KVStoreTest {
     private static final int NUM_MESSAGES_NOT_FOUND = 7;
     private final SimulationResultMap res = SimulationResultSingleton.getInstance();
 
+    /*** CAS
+     * TODO :
+     * * concurrent write and cas - one read
+     * * concurrent cas and read
+     */
+
     @Test
     public void simpleOpsTest() {
         // Initialization of the store
@@ -65,7 +71,6 @@ public class KVStoreTest {
             Assert.assertEquals("NOT_FOUND", res.get(k, String.class));
         }
     }
-
 
     @Test
     public void twoWritesAndRead() {
@@ -123,6 +128,24 @@ public class KVStoreTest {
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
     }
 
+    @Test
+    public void simpleCASandRead() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.simpleCas(6);
+        res.put("testNum", 6);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Assert.assertEquals(new Integer(1), res.get("entry6", Integer.class));
+    }
 
+    @Test
+    public void failedCASandRead() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.simpleCas(6);
+        res.put("testNum", 7);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Assert.assertEquals(new Integer(0), res.get("entry7", Integer.class));
+    }
 
 }

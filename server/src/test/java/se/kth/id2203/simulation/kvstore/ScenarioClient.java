@@ -73,6 +73,12 @@ public class ScenarioClient extends ComponentDefinition {
                 case 5:
                     test5();
                     break;
+                case 6:
+                    test6();
+                    break;
+                case 7:
+                    test7();
+                    break;
                 default:
             }
 
@@ -170,6 +176,15 @@ public class ScenarioClient extends ComponentDefinition {
         res.put(put.key, "PUT");
     }
 
+    private void sendCas(String key, Integer previousValue, Integer newValue){
+        CasRequest cas = new CasRequest(key, new KVEntry(key.hashCode(),previousValue), new KVEntry(key.hashCode(), newValue));
+        cas.setSource(self);
+        RouteMsg rm = new RouteMsg(cas.key, cas);
+        trigger(new Message(self, server, rm), net);
+        pending.put(cas.id, cas.key);
+        res.put(cas.key, "CAS");
+    }
+
     private void test1() {
         int messages = res.get("messages", Integer.class);
         for (int i = 0; i < messages; i++) {
@@ -229,6 +244,18 @@ public class ScenarioClient extends ComponentDefinition {
             sendGet("write");
             res.put("client" + client, "GET");
         }
+    }
+
+    private void test6() {
+        sendPut("entry6", 0);
+        sendCas("entry6", 0, 1);
+        sendGet("entry6");
+    }
+
+    private void test7() {
+        sendPut("entry7", 0);
+        sendCas("entry7", 1, 1);
+        sendGet("entry7");
     }
 
 
