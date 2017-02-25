@@ -396,5 +396,10 @@ public abstract class ScenarioGen {
         };
     }
 
+    public static SimulationScenario concurrentWriteAndCas(final int servers) {
+        return new SimulationScenario() {
+        };
+    }
+
 
 }

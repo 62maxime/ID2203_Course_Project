@@ -148,11 +148,38 @@ public class ScenarioClient extends ComponentDefinition {
         @Override
         public void handle(PutResponse content, Message context) {
             LOG.debug("Got PutResponse: {}", content);
+            int testNum = res.get("testNum", Integer.class);
             String key = pending.remove(content.id);
             if (key != null) {
                 res.put(key, content.status.toString());
             } else {
                 LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+            if (testNum == 6) {
+                sendCas("entry6", 0, 1);
+            } else if (testNum == 7) {
+                sendCas("entry7", 1, 1);
+
+            }
+        }
+    };
+
+    protected final ClassMatchedHandler<CasResponse, Message> casResponseHandler = new ClassMatchedHandler<CasResponse, Message>() {
+
+        @Override
+        public void handle(CasResponse content, Message message) {
+            LOG.debug("Got CasResponse: {}", content);
+            int testNum = res.get("testNum", Integer.class);
+            String key = pending.remove(content.id);
+            if (key != null) {
+                res.put(key, content.status.toString());
+            } else {
+                LOG.warn("ID {} was not pending! Ignoring response.", content.id);
+            }
+            if (testNum == 6) {
+                sendGet("entry6");
+            } else if (testNum == 7){
+                sendGet("entry7");
             }
         }
     };
@@ -248,14 +275,10 @@ public class ScenarioClient extends ComponentDefinition {
 
     private void test6() {
         sendPut("entry6", 0);
-        sendCas("entry6", 0, 1);
-        sendGet("entry6");
     }
 
     private void test7() {
         sendPut("entry7", 0);
-        sendCas("entry7", 1, 1);
-        sendGet("entry7");
     }
 
 
@@ -264,6 +287,7 @@ public class ScenarioClient extends ComponentDefinition {
         subscribe(responseHandler, net);
         subscribe(getResponseHandler, net);
         subscribe(putResponseHandler, net);
+        subscribe(casResponseHandler, net);
         subscribe(killHandler, control);
     }
 }

@@ -47,7 +47,9 @@ public class KVStoreTest {
      * * concurrent cas and read
      */
 
-    @Test
+    // WRITE AND READ
+
+   @Test
     public void simpleOpsTest() {
         // Initialization of the store
         HashMap<Integer, KVEntry> store = new HashMap<>();
@@ -128,6 +130,8 @@ public class KVStoreTest {
         Assert.assertTrue((res1 == null) || (((Integer)res1) == 2));
     }
 
+    // CAS Tests
+
     @Test
     public void simpleCASandRead() {
         long seed = 123;
@@ -147,5 +151,7 @@ public class KVStoreTest {
         simpleBootScenario.simulate(LauncherComp.class);
         Assert.assertEquals(new Integer(0), res.get("entry7", Integer.class));
     }
+
+
 
 }
