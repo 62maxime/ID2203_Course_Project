@@ -2,7 +2,7 @@ package se.kth.id2203.leaderdetection.component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.common.port.GroupTopology;
+import se.kth.id2203.common.event.GroupTopology;
 import se.kth.id2203.epfd.event.Restore;
 import se.kth.id2203.epfd.event.Suspect;
 import se.kth.id2203.epfd.port.EventuallyPerfectFailureDetector;

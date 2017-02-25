@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.component.BebInit;
 import se.kth.id2203.beb.component.BestEffortBroadcast;
+import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.bootstrapping.component.BootstrapClient;
 import se.kth.id2203.bootstrapping.component.BootstrapServer;
 import se.kth.id2203.bootstrapping.port.Bootstrapping;
@@ -75,7 +76,7 @@ public class ParentComponent
         connect(boot.getPositive(Bootstrapping.class), overlay.getNegative(Bootstrapping.class), Channel.TWO_WAY);
         connect(net, overlay.getNegative(Network.class), Channel.TWO_WAY);
         // KV
-        connect(overlay.getPositive(Routing.class), kv.getNegative(Routing.class), Channel.TWO_WAY);
+        connect(overlay.getPositive(Routing.class), kv.getNegative(Routing.class), Channel.TWO_WAY); // TODO remove if not used
         connect(net, kv.getNegative(Network.class), Channel.TWO_WAY);
         // EPFD
         connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
@@ -86,6 +87,8 @@ public class ParentComponent
         connect(timer, epfd.getNegative(Timer.class), Channel.TWO_WAY);
         // BEB
         connect(net, beb.getNegative(Network.class), Channel.TWO_WAY);
+        connect(beb.getPositive(BebPort.class), overlay.getNegative(BebPort.class), Channel.TWO_WAY);
+        connect(beb.getPositive(BebPort.class), kv.getNegative(BebPort.class), Channel.TWO_WAY);
         // MELD
         connect(epfd.getPositive(EventuallyPerfectFailureDetector.class),
                 meld.getNegative(EventuallyPerfectFailureDetector.class), Channel.TWO_WAY);

@@ -6,12 +6,13 @@ import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.event.BebTopology;
 import se.kth.id2203.beb.port.BebPort;
-import se.kth.id2203.common.port.GroupTopology;
+import se.kth.id2203.common.event.GroupTopology;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.*;
 import se.sics.kompics.network.Network;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -32,7 +33,11 @@ public class BestEffortBroadcast extends ComponentDefinition {
         public void handle(BebRequest bebRequest) {
             LOG.info("[BebBroadcast] BebRequest received by " + self.toString());
             LOG.debug("[BebBroadcast] Topology = " + topology.toString());
-            for (NetAddress adr : topology) {
+            Collection<NetAddress> bebTopo = bebRequest.getSpecifiedTopology();
+            if (bebTopo == null) {
+                bebTopo = topology;
+            }
+            for (NetAddress adr : bebTopo) {
                 trigger(new Message(self, adr, bebRequest), net);
                 LOG.debug("[BebBroadcast] Payload sent to " + adr.toString());
             }

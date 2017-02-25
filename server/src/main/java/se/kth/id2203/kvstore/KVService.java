@@ -25,6 +25,8 @@ package se.kth.id2203.kvstore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.beb.event.BebDeliver;
+import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.kvstore.OpResponse.Code;
 import se.kth.id2203.leaderdetection.event.Trust;
 import se.kth.id2203.leaderdetection.port.MonarchicalEventualLeaderDetection;
@@ -35,7 +37,6 @@ import se.kth.id2203.multipaxos.port.AscPort;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay.Routing;
-import se.kth.id2203.sharedmemory.port.ReadImposeWriteConsult;
 import se.sics.kompics.ClassMatchedHandler;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -53,11 +54,11 @@ public class KVService extends ComponentDefinition {
     final static Logger LOG = LoggerFactory.getLogger(KVService.class);
     //******* Ports ******
     protected final Positive<Network> net = requires(Network.class);
-    protected final Positive<Routing> route = requires(Routing.class);
-    protected final Positive<ReadImposeWriteConsult> riwc = requires(ReadImposeWriteConsult.class);
+    protected final Positive<Routing> route = requires(Routing.class); // TODO remove if not used
     protected final Positive<MonarchicalEventualLeaderDetection> meld =
             requires(MonarchicalEventualLeaderDetection.class);
     protected final Positive<AscPort> asc = requires(AscPort.class);
+    protected final Positive<BebPort> beb = requires(BebPort.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private NetAddress leader = null;
@@ -69,47 +70,48 @@ public class KVService extends ComponentDefinition {
     }
 
     //******* Handlers ******
-    protected final ClassMatchedHandler<Operation, Message> opHandler = new ClassMatchedHandler<Operation, Message>() {
+    protected final ClassMatchedHandler<Operation, BebDeliver> opHandler = new ClassMatchedHandler<Operation, BebDeliver>() {
 
         @Override
-        public void handle(Operation content, Message context) {
+        public void handle(Operation content, BebDeliver context) {
             LOG.info("Got operation {}! Now implement me please :)", content);
-            trigger(new Message(self, context.getSource(), (new OpResponse(content.id, Code.NOT_IMPLEMENTED))), net);
+            trigger(new Message(self, context.source, (new OpResponse(content.id, Code.NOT_IMPLEMENTED))), net);
 
         }
 
     };
+
     private void proposeOperation(Operation content) {
         LOG.debug("Got {}", content);
         if (leader.equals(self)) {
             LOG.debug("{} is the leader, propose {}", self, content);
             trigger(new AscPropose(content), asc);
         } else {
-            LOG.debug("{} is not the leader, forward {}", self, content);
-            trigger(new Message(self, leader, content), net);
+            LOG.debug("{} is not the leader, drop {}", self, content);
+            //trigger(new Message(self, leader, content), net);
         }
     }
 
-    protected final ClassMatchedHandler<GetRequest, Message> getHandler = new ClassMatchedHandler<GetRequest, Message>() {
+    protected final ClassMatchedHandler<GetRequest, BebDeliver> getHandler = new ClassMatchedHandler<GetRequest, BebDeliver>() {
 
         @Override
-        public void handle(GetRequest content, Message context) {
+        public void handle(GetRequest content, BebDeliver context) {
             proposeOperation(content);
         }
 
     };
-    protected final ClassMatchedHandler<PutRequest, Message> putHandler = new ClassMatchedHandler<PutRequest, Message>() {
+    protected final ClassMatchedHandler<PutRequest, BebDeliver> putHandler = new ClassMatchedHandler<PutRequest, BebDeliver>() {
 
         @Override
-        public void handle(PutRequest content, Message context) {
+        public void handle(PutRequest content, BebDeliver context) {
             proposeOperation(content);
         }
 
     };
-    protected final ClassMatchedHandler<CasRequest, Message> casHandler = new ClassMatchedHandler<CasRequest, Message>() {
+    protected final ClassMatchedHandler<CasRequest, BebDeliver> casHandler = new ClassMatchedHandler<CasRequest, BebDeliver>() {
 
         @Override
-        public void handle(CasRequest content, Message context) {
+        public void handle(CasRequest content, BebDeliver context) {
             proposeOperation(content);
         }
 
@@ -182,17 +184,17 @@ public class KVService extends ComponentDefinition {
     protected final Handler<AscAbort> abortHandler = new Handler<AscAbort>() {
         @Override
         public void handle(AscAbort ascAbort) {
-            // TODO
+            // TODO Handle when a command is aborted
             LOG.debug("Abort {}", ascAbort.getOperation());
         }
     };
 
 
     {
-        subscribe(opHandler, net);
-        subscribe(getHandler, net);
-        subscribe(putHandler, net);
-        subscribe(casHandler, net);
+        subscribe(opHandler, beb);
+        subscribe(getHandler, beb);
+        subscribe(putHandler, beb);
+        subscribe(casHandler, beb);
         subscribe(trustHandler, meld);
         subscribe(getRequestClassMatchedHandler, asc);
         subscribe(putRequestClassMatchedHandler, asc);

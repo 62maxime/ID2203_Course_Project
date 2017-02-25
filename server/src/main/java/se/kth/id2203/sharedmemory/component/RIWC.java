@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import se.kth.id2203.beb.event.BebDeliver;
 import se.kth.id2203.beb.event.BebRequest;
 import se.kth.id2203.beb.port.BebPort;
-import se.kth.id2203.common.port.GroupTopology;
+import se.kth.id2203.common.event.GroupTopology;
 import se.kth.id2203.kvstore.KVEntry;
 import se.kth.id2203.networking.Message;
 import se.kth.id2203.networking.NetAddress;
@@ -59,7 +59,6 @@ public class RIWC extends ComponentDefinition {
             readList.clear();
             trigger(new BebRequest(
                     new Read(ar_write_request.getUuid(), rid, ar_write_request.getKey())), beb);
-            // TODO might not be optimal
         }
     };
     protected final ClassMatchedHandler<Read, BebDeliver> readBebDeliverHandler = new ClassMatchedHandler<Read, BebDeliver>() {

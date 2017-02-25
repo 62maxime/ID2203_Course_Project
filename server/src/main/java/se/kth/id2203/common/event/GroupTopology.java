@@ -1,4 +1,4 @@
-package se.kth.id2203.common.port;
+package se.kth.id2203.common.event;
 
 import se.kth.id2203.overlay.ReplicationGroup;
 import se.sics.kompics.KompicsEvent;

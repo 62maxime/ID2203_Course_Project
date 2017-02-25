@@ -26,11 +26,13 @@ package se.kth.id2203.overlay;
 import com.larskroll.common.J6;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.id2203.beb.event.BebRequest;
+import se.kth.id2203.beb.port.BebPort;
 import se.kth.id2203.bootstrapping.event.Booted;
 import se.kth.id2203.bootstrapping.event.GetInitialAssignments;
 import se.kth.id2203.bootstrapping.event.InitialAssignments;
 import se.kth.id2203.bootstrapping.port.Bootstrapping;
-import se.kth.id2203.common.port.GroupTopology;
+import se.kth.id2203.common.event.GroupTopology;
 import se.kth.id2203.epfd.component.EpfdInit;
 import se.kth.id2203.epfd.event.ListenTo;
 import se.kth.id2203.epfd.event.Reset;
@@ -66,6 +68,7 @@ public class VSOverlayManager extends ComponentDefinition {
     protected final Positive<Timer> timer = requires(Timer.class);
     protected final Positive<EventuallyPerfectFailureDetector> epfd = requires(EventuallyPerfectFailureDetector.class);
     protected final Positive<AscPort> asc = requires(AscPort.class);
+    protected final Positive<BebPort> beb = requires(BebPort.class);
     //******* Fields ******
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private LookupTable lut = null;
@@ -104,17 +107,20 @@ public class VSOverlayManager extends ComponentDefinition {
         @Override
         public void handle(RouteMsg content, Message context) {
             Collection<NetAddress> partition = lut.lookup(content.key);
-            NetAddress target = J6.randomElement(partition);
-            LOG.info("Forwarding message for key {} to {}", content.key, target);
-            trigger(new Message(context.getSource(), target, content.msg), net);
+            LOG.info("Forwarding message for key {} to {}", content.key, partition);
+            trigger(new BebRequest(content.msg, partition), beb);
+            /*NetAddress target = J6.randomElement(partition);
+            trigger(new Message(context.getSource(), target, content.msg), net);*/
 
         }
     };
+    // TODO remove this handler if not used in the future (KVService currently does not send RouteMsg to the Overlay)
     protected final Handler<RouteMsg> localRouteHandler = new Handler<RouteMsg>() {
 
         @Override
         public void handle(RouteMsg event) {
             Collection<NetAddress> partition = lut.lookup(event.key);
+            //trigger(new BebRequest(event.msg, partition), beb);
             NetAddress target = J6.randomElement(partition);
             LOG.info("Routing message for key {} to {}", event.key, target);
             trigger(new Message(self, target, event.msg), net);
@@ -140,7 +146,7 @@ public class VSOverlayManager extends ComponentDefinition {
         Integer period = config().getValue("id2203.project.EpfdPeriod", Integer.class);
         replicationGroup = lut.getKey(self);
         trigger(new Reset(new EpfdInit(self, delta, period)), epfd);
-        trigger(new ListenTo(replicationGroup.getNodes()), epfd); // TODO listen to the whole group for BEB
+        trigger(new ListenTo(replicationGroup.getNodes()), epfd);
         trigger(new Message(self, self, new GroupTopology(replicationGroup)), net);
         booted = true;
     }

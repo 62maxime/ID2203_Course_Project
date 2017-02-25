@@ -4,6 +4,8 @@ import se.kth.id2203.networking.NetAddress;
 import se.sics.kompics.KompicsEvent;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,8 +17,8 @@ public class ListenTo implements KompicsEvent, Serializable {
 
     private final Set<NetAddress> addresses;
 
-    public ListenTo(Set<NetAddress> addresses) {
-        this.addresses = addresses;
+    public ListenTo(Collection<NetAddress> addresses) {
+        this.addresses = new HashSet<>(addresses);
     }
 
     public Set<NetAddress> getAddresses() {

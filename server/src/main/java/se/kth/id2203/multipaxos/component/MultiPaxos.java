@@ -2,7 +2,7 @@ package se.kth.id2203.multipaxos.component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.id2203.common.port.GroupTopology;
+import se.kth.id2203.common.event.GroupTopology;
 import se.kth.id2203.kvstore.Operation;
 import se.kth.id2203.multipaxos.event.*;
 import se.kth.id2203.multipaxos.port.AscPort;
