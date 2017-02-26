@@ -341,7 +341,7 @@ public abstract class ScenarioGen {
             }
         };
     }
-    public static SimulationScenario failedWrite(final int servers) {
+    public static SimulationScenario failure(final int servers) {
         return new SimulationScenario() {
             {
                 StochasticProcess startCluster = new StochasticProcess() {

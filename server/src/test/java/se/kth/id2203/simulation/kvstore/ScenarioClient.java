@@ -85,6 +85,12 @@ public class ScenarioClient extends ComponentDefinition {
                 case 9:
                     test9();
                     break;
+                case 10:
+                    test10();
+                    break;
+                case 11:
+                    test11();
+                    break;
                 default:
             }
 
@@ -121,14 +127,14 @@ public class ScenarioClient extends ComponentDefinition {
             int testNum = res.get("testNum", Integer.class);
             if (key != null) {
                 if (content.getValue() == null) {
-                    if (testNum == 4 || testNum == 5) {
+                    if (testNum == 4 || testNum == 5 || testNum == 11) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, "NOT_FOUND");
                     } else {
                         res.put(key, "NOT_FOUND");
                     }
                 } else {
-                    if (testNum == 2 || testNum == 4  || testNum == 5 || testNum == 8 || testNum == 9) {
+                    if (testNum == 2 || testNum == 4  || testNum == 5 || testNum >= 8) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, content.getValue().getValue());
                     } else if (testNum == 3) {
@@ -309,6 +315,30 @@ public class ScenarioClient extends ComponentDefinition {
             sendCas("test1", 40, 20);
         } else {
             sendGet("test1");
+        }
+    }
+
+    private void test10() {
+        int client = config().getValue("id2203.project.client", Integer.class);
+        if (client == 1) {
+            sendCas("test2", 39, 2);
+            res.put("client" + 2, "PUT");
+            suicide();
+        } else {
+            sendGet("test2");
+            res.put("client" + client, "GET");
+        }
+    }
+
+    private void test11() {
+        int client = config().getValue("id2203.project.client", Integer.class);
+        if (client == 1) {
+            sendCas("entry11", 100, 2);
+            res.put("client" + 2, "PUT");
+            suicide();
+        } else {
+            sendGet("entry11");
+            res.put("client" + client, "GET");
         }
     }
 

@@ -120,7 +120,7 @@ public class KVStoreTest {
     public void failedWrite() {
         long seed = 123;
         SimulationScenario.setSeed(seed);
-        SimulationScenario simpleBootScenario = ScenarioGen.failedWrite(6);
+        SimulationScenario simpleBootScenario = ScenarioGen.failure(6);
         res.put("testNum", 5);
         simpleBootScenario.simulate(LauncherComp.class);
         Object res1 = res.get("client2", Object.class);
@@ -178,6 +178,28 @@ public class KVStoreTest {
         Integer res2 = res.get("client4", Integer.class);
         Assert.assertTrue((res1 == 10) || (res1 == 20));
         Assert.assertEquals(res1, res2);
+    }
+
+    @Test
+    public void failedCas() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.failure(6);
+        res.put("testNum", 10);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Integer res1 = res.get("client2", Integer.class);
+        Assert.assertTrue((res1 == 39) || (res1 == 2));
+    }
+
+    @Test
+    public void casOnNull() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.failure(6);
+        res.put("testNum", 11);
+        simpleBootScenario.simulate(LauncherComp.class);
+        String res1 = res.get("client2", String.class);
+        Assert.assertEquals("NOT_FOUND", res1);
     }
 
 }
