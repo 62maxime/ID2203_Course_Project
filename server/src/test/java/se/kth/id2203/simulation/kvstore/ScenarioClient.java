@@ -79,6 +79,9 @@ public class ScenarioClient extends ComponentDefinition {
                 case 7:
                     test7();
                     break;
+                case 8:
+                    test8();
+                    break;
                 default:
             }
 
@@ -122,7 +125,7 @@ public class ScenarioClient extends ComponentDefinition {
                         res.put(key, "NOT_FOUND");
                     }
                 } else {
-                    if (testNum == 2 || testNum == 4  || testNum == 5) {
+                    if (testNum == 2 || testNum == 4  || testNum == 5 || testNum == 8) {
                         int client = config().getValue("id2203.project.client", Integer.class);
                         res.put("client" + client, content.getValue().getValue());
                     } else if (testNum == 3) {
@@ -132,7 +135,7 @@ public class ScenarioClient extends ComponentDefinition {
                             sendPut("write", client);
                             res.put("client" + 1, "PUT");
                         }
-                    }  else {
+                    } else {
                         res.put(key, content.getValue().getValue());
                     }
 
@@ -279,6 +282,20 @@ public class ScenarioClient extends ComponentDefinition {
 
     private void test7() {
         sendPut("entry7", 0);
+    }
+
+    private void test8() {
+        int type = config().getValue("id2203.project.type", Integer.class);
+        int client = config().getValue("id2203.project.client", Integer.class);
+        if (type == 1) {
+            sendPut("test0", 10);
+        } else {
+            if (client == 1) {
+                sendCas("test0", 10, 20);
+            } else {
+                sendGet("test0");
+            }
+        }
     }
 
 

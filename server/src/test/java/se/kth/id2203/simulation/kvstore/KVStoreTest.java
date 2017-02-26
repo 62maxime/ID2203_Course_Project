@@ -32,6 +32,8 @@ import se.sics.kompics.simulator.run.LauncherComp;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import static org.junit.Assert.fail;
+
 /**
  * @author Lars Kroll <lkroll@kth.se>
  */
@@ -150,6 +152,19 @@ public class KVStoreTest {
         res.put("testNum", 7);
         simpleBootScenario.simulate(LauncherComp.class);
         Assert.assertEquals(new Integer(0), res.get("entry7", Integer.class));
+    }
+
+    @Test
+    public void concurrentPutAndCAS() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.concurrentPutAndCas(6);
+        res.put("testNum", 8);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Integer res1 = res.get("client2", Integer.class);
+        Integer res2 = res.get("client3", Integer.class);
+        Assert.assertTrue((res1 == 10) || (res1 == 20));
+        Assert.assertEquals(res1, res2);
     }
 
 

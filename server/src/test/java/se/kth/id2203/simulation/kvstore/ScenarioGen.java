@@ -396,8 +396,58 @@ public abstract class ScenarioGen {
         };
     }
 
-    public static SimulationScenario concurrentWriteAndCas(final int servers) {
+    public static SimulationScenario concurrentPutAndCas(final int servers) {
         return new SimulationScenario() {
+            {
+                StochasticProcess startCluster = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(servers, startServerOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                StochasticProcess concurrentPut = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startClientOp, new BasicIntSequentialDistribution(1));
+                    }
+                };
+
+                StochasticProcess concurrentCAS = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(1),
+                                new BasicIntSequentialDistribution(1),
+                                new BasicIntSequentialDistribution(2));
+                    }
+                };
+
+                StochasticProcess read1 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(2),
+                                new BasicIntSequentialDistribution(2),
+                                new BasicIntSequentialDistribution(3));
+                    }
+                };
+
+                StochasticProcess read2 = new StochasticProcess() {
+                    {
+                        eventInterArrivalTime(constant(1000));
+                        raise(1, startReadClientOp, new BasicIntSequentialDistribution(3),
+                                new BasicIntSequentialDistribution(3),
+                                new BasicIntSequentialDistribution(4));
+                    }
+                };
+
+                startCluster.start();
+                concurrentPut.startAfterTerminationOf(20000, startCluster);
+                concurrentCAS.startAfterTerminationOf(20000, startCluster);
+                read1.startAfterTerminationOf(5000, concurrentCAS);
+                read2.startAfterTerminationOf(5000, concurrentCAS);
+                terminateAfterTerminationOf(2000, read2);
+
+            }
         };
     }
 
