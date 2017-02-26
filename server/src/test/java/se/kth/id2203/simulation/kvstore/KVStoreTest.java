@@ -167,6 +167,17 @@ public class KVStoreTest {
         Assert.assertEquals(res1, res2);
     }
 
-
+    @Test
+    public void concurrentTwoCAS() {
+        long seed = 123;
+        SimulationScenario.setSeed(seed);
+        SimulationScenario simpleBootScenario = ScenarioGen.concurrentTwoCas(6);
+        res.put("testNum", 9);
+        simpleBootScenario.simulate(LauncherComp.class);
+        Integer res1 = res.get("client3", Integer.class);
+        Integer res2 = res.get("client4", Integer.class);
+        Assert.assertTrue((res1 == 10) || (res1 == 20));
+        Assert.assertEquals(res1, res2);
+    }
 
 }
