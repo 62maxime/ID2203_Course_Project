@@ -190,6 +190,8 @@ public class KVService extends ComponentDefinition {
         public void handle(AscAbort ascAbort) {
             // TODO Handle when a command is aborted
             LOG.debug("Abort {}", ascAbort.getOperation());
+            Operation operation = ascAbort.getOperation();
+            proposeOperation(operation);
         }
     };
 
