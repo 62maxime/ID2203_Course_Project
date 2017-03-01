@@ -1,11 +1,12 @@
 package se.kth.id2203.kvstore;
 
 import se.kth.id2203.networking.NetAddress;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * Created by 62maxime on 23/02/2017.
  */
-public class CasRequest extends Operation {
+public class CasRequest extends Operation implements KompicsEvent {
 
     private KVEntry oldValue;
     private KVEntry newValue;

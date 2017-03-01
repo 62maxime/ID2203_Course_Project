@@ -12,7 +12,7 @@ import java.util.Collection;
 public class BebRequest implements KompicsEvent, Serializable {
     private static final long serialVersionUID = -7348390257691821188L;
     public final KompicsEvent payload;
-    private final Collection<NetAddress> specifiedTopology;
+    private transient final Collection<NetAddress> specifiedTopology;
 
     public BebRequest(KompicsEvent payload, Collection<NetAddress> specifiedTopology) {
         this.payload = payload;
