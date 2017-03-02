@@ -9,14 +9,14 @@ import java.util.UUID;
  */
 public class CasResponse extends OpResponse implements KompicsEvent {
 
-    private boolean success;
+    private KVEntry value;
 
-    public CasResponse(UUID id, Code status, boolean success) {
+    public CasResponse(UUID id, Code status, KVEntry value) {
         super(id, status);
-        this.success = success;
+        this.value = value;
     }
 
-    public boolean isSuccess() {
-        return success;
+    public KVEntry getValue() {
+        return value;
     }
 }

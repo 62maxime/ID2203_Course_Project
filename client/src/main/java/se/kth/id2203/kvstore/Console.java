@@ -170,7 +170,7 @@ public class Console implements Runnable {
                         OpResponse response = fr.get();
                         if (response instanceof CasResponse) {
                             CasResponse r = (CasResponse) response;
-                            out.println("Operation complete! Success: " + r.isSuccess());
+                            out.println("Operation complete! Success: " + r.getValue());
                             return true;
                         } else {
                             return false;

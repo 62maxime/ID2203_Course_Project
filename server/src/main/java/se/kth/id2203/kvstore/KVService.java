@@ -170,16 +170,16 @@ public class KVService extends ComponentDefinition {
                 return;
             }
             KVEntry value = store.get(key);
-            boolean success = false;
             if (value == null) {
-                trigger(new Message(self, address, new CasResponse(uuid, Code.NOT_FOUND, success)), net);
+                if (leader.equals(self)) {
+                    trigger(new Message(self, address, new CasResponse(uuid, Code.NOT_FOUND, null)), net);
+                }
             } else {
                 if (value.getValue().equals(casRequest.getOldValue().getValue())) {
                     store.put(key, casRequest.getNewValue());
-                    success = true;
                 }
                 if (leader.equals(self)) {
-                    trigger(new Message(self, address, new CasResponse(uuid, Code.OK, success)), net);
+                    trigger(new Message(self, address, new CasResponse(uuid, Code.OK, value)), net);
                 }
             }
         }
