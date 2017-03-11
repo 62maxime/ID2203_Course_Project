@@ -44,6 +44,8 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.UUID;
 
 /**
@@ -63,10 +65,12 @@ public class KVService extends ComponentDefinition {
     final NetAddress self = config().getValue("id2203.project.address", NetAddress.class);
     private NetAddress leader = null;
     private HashMap<Integer, KVEntry> store;
+    private HashSet<Operation> undecided;
 
     //******* Constructor ******
     public KVService(KVServiceInit init) {
         this.store = new HashMap<>(init.getStore());
+        this.undecided = new HashSet<>();
     }
 
     //******* Handlers ******
@@ -82,13 +86,15 @@ public class KVService extends ComponentDefinition {
     };
 
     private void proposeOperation(Operation content) {
-        LOG.debug("Got {}", content);
-        if (leader.equals(self)) {
-            LOG.debug("{} is the leader, propose {}", self, content);
-            trigger(new AscPropose(content), asc);
-        } else {
-            LOG.debug("{} is not the leader, drop {}", self, content);
-            //trigger(new Message(self, leader, content), net);
+        if (undecided.add(content)) {
+            LOG.debug("Got {}", content);
+            if (leader.equals(self)) {
+                LOG.debug("{} is the leader, propose {}", self, content);
+                trigger(new AscPropose(content), asc);
+            } else {
+                LOG.debug("{} is not the leader, drop {}", self, content);
+                //trigger(new Message(self, leader, content), net);
+            }
         }
     }
 
@@ -116,16 +122,47 @@ public class KVService extends ComponentDefinition {
         }
 
     };
+    protected final ClassMatchedHandler<GetRequest, Message> getHandlerMessage = new ClassMatchedHandler<GetRequest, Message>() {
+
+        @Override
+        public void handle(GetRequest content, Message context) {
+            proposeOperation(content);
+        }
+
+    };
+    protected final ClassMatchedHandler<PutRequest, Message> putHandlerMessage = new ClassMatchedHandler<PutRequest, Message>() {
+
+        @Override
+        public void handle(PutRequest content, Message context) {
+            proposeOperation(content);
+        }
+
+    };
+    protected final ClassMatchedHandler<CasRequest, Message> casHandlerMessage = new ClassMatchedHandler<CasRequest, Message>() {
+
+        @Override
+        public void handle(CasRequest content, Message context) {
+            proposeOperation(content);
+        }
+
+    };
     protected final Handler<Trust> trustHandler = new Handler<Trust>() {
         @Override
         public void handle(Trust trust) {
             leader = trust.getLeader();
             LOG.debug("From {}, Got a new leader {}", self, leader);
+            if (!leader.equals(self)) {
+                for (Operation o :
+                        undecided) {
+                    trigger(new Message(self, leader, o), net);
+                }
+            }
         }
     };
     protected final ClassMatchedHandler<GetRequest, AscDecide> getRequestClassMatchedHandler = new ClassMatchedHandler<GetRequest, AscDecide>() {
         @Override
         public void handle(GetRequest getRequest, AscDecide ascDecide) {
+            undecided.remove(getRequest);
             LOG.debug("Decide {}", getRequest);
             Integer key = getRequest.key.hashCode();
             UUID uuid = getRequest.id;
@@ -146,6 +183,7 @@ public class KVService extends ComponentDefinition {
     protected final ClassMatchedHandler<PutRequest, AscDecide> putRequestClassMatchedHandler = new ClassMatchedHandler<PutRequest, AscDecide>() {
         @Override
         public void handle(PutRequest putRequest, AscDecide ascDecide) {
+            undecided.remove(putRequest);
             LOG.debug("Decide {}", putRequest);
             Integer key = putRequest.key.hashCode();
             UUID uuid = putRequest.id;
@@ -162,6 +200,7 @@ public class KVService extends ComponentDefinition {
     protected final ClassMatchedHandler<CasRequest, AscDecide> casRequestClassMatchedHandler = new ClassMatchedHandler<CasRequest, AscDecide>() {
         @Override
         public void handle(CasRequest casRequest, AscDecide ascDecide) {
+            undecided.remove(casRequest);
             LOG.debug("Decide {}", casRequest);
             Integer key = casRequest.key.hashCode();
             UUID uuid = casRequest.id;
@@ -188,10 +227,13 @@ public class KVService extends ComponentDefinition {
     protected final Handler<AscAbort> abortHandler = new Handler<AscAbort>() {
         @Override
         public void handle(AscAbort ascAbort) {
-            // TODO Handle when a command is aborted
             LOG.debug("Abort {}", ascAbort.getOperation());
-            Operation operation = ascAbort.getOperation();
-            proposeOperation(operation);
+            if (leader.equals(self)) {
+                for (Operation o :
+                        undecided) {
+                    proposeOperation(o);
+                }
+            }
         }
     };
 
@@ -201,6 +243,9 @@ public class KVService extends ComponentDefinition {
         subscribe(getHandler, beb);
         subscribe(putHandler, beb);
         subscribe(casHandler, beb);
+        subscribe(getHandlerMessage, net);
+        subscribe(putHandlerMessage, net);
+        subscribe(casHandlerMessage, net);
         subscribe(trustHandler, meld);
         subscribe(getRequestClassMatchedHandler, asc);
         subscribe(putRequestClassMatchedHandler, asc);
